@@ -11,16 +11,12 @@ ENV/
 .venv
 
 # Data and models
-data/
-pretrained_weights/
 *.ply
 *.pth
 *.ckpt
 
 # Results
 results/
-outputs/
-logs/
 
 # IDE
 .vscode/

@@ -102,34 +102,16 @@ python src/inference.py \
 ## 📁 Project Structure
 
 ```
-conditional-gaussian-splatting/
-├── src/
-│   ├── model.py                 # Model architectures
-│   │   ├── Hypernet            # MLP for conditional parameters
-│   │   ├── CondGaussianSplatting  # Main model
-│   │   └── ViewInvariantEncoder   # Face encoder
-│   ├── dataset.py              # Data loading and processing
-│   │   ├── ColmapParser       # COLMAP data parser
-│   │   └── GaussianFaceDataset # PyTorch dataset
-│   ├── train.py                # Training script
-│   │   ├── TrainingConfig     # Configuration dataclass
-│   │   └── GaussianSplattingTrainer # Training engine
-│   └── utils.py                # Utility functions
-│       ├── load_ply_to_splats # PLY file I/O
-│       ├── transform_*        # Camera/point transformations
-│       └── normalize          # Scene normalization
+FastAvatar/
+├── scripts/
+│   ├── model.py                 # Model architectures  
+│   ├── dataset.py              # Data loading and processing   
+│   ├── inference.py                # Feed-forward Inference script 
+│   └── utils.py                # Utility functions      
 ├── data/                       # Dataset directory (not included)
 │   └── <sample_id>/           # Individual samples
 ├── pretrained_weights/         # Pretrained models
-│   ├── encoder_neutral_flame.pth
-│   └── decoder_neutral_flame.pth
 ├── results/                    # Output directory
-│   ├── images/                # Rendered images
-│   ├── ply/                   # Output point clouds
-│   └── checkpoints/           # Model checkpoints
-├── requirements.txt            # Python dependencies
-├── LICENSE                     # MIT License
-└── README.md                   # This file
 ```
 
 
@@ -152,7 +134,7 @@ This project builds upon several excellent open-source projects:
 - **[3D Gaussian Splatting](https://github.com/graphdeco-inria/gaussian-splatting)** - The foundational 3D Gaussian Splatting paper and implementation by Kerbl et al.
 - **[gsplat](https://github.com/nerfstudio-project/gsplat)** - Efficient CUDA kernels for differentiable Gaussian rasterization from Nerfstudio
 - **[InsightFace](https://github.com/deepinsight/insightface)** - State-of-the-art face analysis toolkit for face recognition and embedding
-
+- **[VHAP](https://github.com/ShenhanQian/VHAP)** - Head Tracking with FLAME
 
 Special thanks to the authors of these works for making their code publicly available.
 
@@ -161,8 +143,7 @@ Special thanks to the authors of these works for making their code publicly avai
 If you find this work useful for your research, please consider citing:
 
 ```bibtex
-@misc{****
-}
+@misc{****}
 ```
 
 
