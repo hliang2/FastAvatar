@@ -93,13 +93,13 @@ data/
 FastAvatar/
 ├── scripts/
 │   ├── model.py                 # Model architectures  
-│   ├── dataset.py              # Data loading and processing   
-│   ├── inference.py                # Feed-forward Inference script 
-│   └── utils.py                # Utility functions      
-├── data/                       # Dataset directory (not included)
-│   └── <sample_id>/           # Individual samples
-├── pretrained_weights/         # Pretrained models
-├── results/                    # Output directory
+│   ├── dataset.py               # Data loading and processing   
+│   ├── inference.py             # Feed-forward Inference script 
+│   └── utils.py                 # Utility functions      
+├── data/                        # Dataset directory (not included)
+│   └── <sample_id>/             # Individual samples
+├── pretrained_weights/          # Pretrained models
+├── results/                     # Output directory
 ```
 
 
