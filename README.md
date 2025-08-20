@@ -26,11 +26,12 @@ We introduce FastAvatar, which achieves real-time 3D face reconstruction from a 
 git clone https://github.com/hliang2/FastAvatar.git
 cd FastAvatar
 
-# Create virtual environment
+# Create virtual environment 
 conda create --name fastavatar -y python=3.10
 conda activate fastavatar
 
 # Install PyTorch (adjust CUDA version as needed)
+# Igore the package warnings at this step, will be fixed after next step
 pip install torch==2.1.0+cu121 torchvision==0.16.0+cu121 --index-url https://download.pytorch.org/whl/cu121
 
 # Install dependencies
