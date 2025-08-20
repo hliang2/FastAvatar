@@ -630,7 +630,7 @@ def create_config_from_args() -> TrainingConfig:
     )
     parser.add_argument(
         '--ply_file_path', type=str,
-        default="data/averaged_model.ply",
+        default="pretrained_weights/averaged_model.ply",
         help='Path to base PLY model file'
     )
     parser.add_argument(
@@ -650,7 +650,7 @@ def create_config_from_args() -> TrainingConfig:
     
     # Training parameters
     parser.add_argument(
-        '--max_epochs', type=int, default=301
+        '--max_epochs', type=int, default=301,
         help='Number of training epochs per view'
     )
     parser.add_argument(

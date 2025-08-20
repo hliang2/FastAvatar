@@ -41,11 +41,9 @@ pip install -r requirements.txt
 ### Download Pretrained Models
 Pretrained models can be downloaded **[here](https://drive.google.com/file/d/1SQOx8kHnnaqaCv_PjUqbVMYRzUOtUZuM/view?usp=sharing)**
 ```bash
-# Create directories
-mkdir -p pretrained_weights
 
-# Download pretrained encoder and decoder
-# Place them in pretrained_weights/
+# Download pretrained encoder, decoder and canonical model
+# Unzip and place them in pretrained_weights/
 ```
 
 ## Basic Usage
@@ -54,10 +52,10 @@ mkdir -p pretrained_weights
 
 ```python
 # Basic training with default parameters
-python scripts/infrence.py
+python scripts/inference.py
 
 # Custom learning rates and regularization
-python scripts/infrence.py \
+python scripts/inference.py \
     --sample_id 306 \
     --max_epochs 401 \
     --mlp_lr 2e-4 \

@@ -1,25 +1,34 @@
-# assume torch is already installed
+# Torch and Torchvision should be installed separately:
+#   pip install torch==2.1.0+cu121 torchvision==0.16.0+cu121 --index-url https://download.pytorch.org/whl/cu121
 
-# pycolmap for data parsing
+# Core dependencies
+numpy==1.25.1
+scikit-learn==1.5.0
+tqdm==4.66.4
+torchmetrics[image]==1.4.0
+opencv-python==4.9.0.80
+Pillow==10.3.0
+tensorboard==2.19.0
+tensorly==0.8.1
+pyyaml==6.0.2
+matplotlib==3.9.0
+splines==0.3.0
+pandas>=1
+lpips
+onnxruntime
+plyfile
+mediapipe==0.10.15
+# External GitHub repos
 git+https://github.com/rmbrualla/pycolmap@cc7ea4b7301720ac29287dbe450952511b32125e
-# (optional) nerfacc for torch version rasterization 
-# git+https://github.com/nerfstudio-project/nerfacc
-
-viser
-git+https://github.com/nerfstudio-project/nerfview@4538024fe0d15fd1a0e4d760f3695fc44ca72787
-imageio[ffmpeg]
-numpy<2.0.0
-scikit-learn
-tqdm
-torchmetrics[image]
-opencv-python
-tyro>=0.8.8
-Pillow
-tensorboard
-tensorly
-pyyaml
-matplotlib
 git+https://github.com/rahul-goel/fused-ssim@328dc9836f513d00c4b5bc38fe30478b4435cbb5
 git+https://github.com/harry7557558/fused-bilagrid@90f9788e57d3545e3a033c1038bb9986549632fe
-splines
-gsplat
+
+
+# (optional) nerfacc for torch rasterization
+# git+https://github.com/nerfstudio-project/nerfacc
+
+# Face recognition / rendering
+insightface>=0.7
+gsplat>=1.0
+tyro>=0.8.8
+imageio[ffmpeg]==2.35.1
