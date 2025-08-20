@@ -39,12 +39,12 @@ pip install -r requirements.txt
 ```
 
 ### Download Pretrained Models
-
+Pretrained models can be downloaded **[here](https://drive.google.com/file/d/1SQOx8kHnnaqaCv_PjUqbVMYRzUOtUZuM/view?usp=sharing)**
 ```bash
 # Create directories
 mkdir -p pretrained_weights
 
-# Download pretrained encoder and decoder (links to be added)
+# Download pretrained encoder and decoder
 # Place them in pretrained_weights/
 ```
 
