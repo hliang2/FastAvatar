@@ -2,6 +2,8 @@
 #   pip install torch==2.1.0+cu121 torchvision==0.16.0+cu121 --index-url https://download.pytorch.org/whl/cu121
 
 # Core dependencies
+python-dotenv
+trimesh
 numpy==1.25.1
 scikit-learn==1.5.0
 tqdm==4.66.4

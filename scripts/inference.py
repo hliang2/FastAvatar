@@ -253,7 +253,6 @@ class GaussianSplattingTrainer:
         self.dirs = {
             'images': Path(self.cfg.save_path) / 'images' / self.output_name,
             'ply': Path(self.cfg.save_path) / 'ply' / self.output_name,
-            'checkpoints': Path(self.cfg.save_path) / 'checkpoints' / self.output_name,
         }
         
         # Create directories

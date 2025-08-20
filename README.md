@@ -63,6 +63,15 @@ python scripts/inference.py \
 python scripts/inference.py --sample_id 306 --lpips_net vgg
 ```
 
+All experiment outputs are organized under the `results/` folder:
+
+- **`results/images/`**  
+  Contains rendered sample view images for each subject for quick reference.
+
+- **`results/ply/`**  
+  Contains 3D point cloud reconstructions in `.ply` format. These can be visualized with any standard 3D viewer.  
+  For example, you can use [Supersplat](https://superspl.at/editor) for interactive visualization of Gaussian-based point clouds.
+
 ### Data Preparation
 
 ```bash
