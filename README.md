@@ -71,7 +71,7 @@ All experiment outputs are organized under the `results/` folder:
   Contains 3D point cloud reconstructions in `.ply` format. These can be visualized with any standard 3D viewer.  
   For example, you can use [Supersplat](https://superspl.at/editor) for interactive visualization of Gaussian-based point clouds.
 
-### Data Preparation
+### Data Preparation *(optional with custom data, instructions to be added)*
 
 ```bash
 # Structure your data as follows:
