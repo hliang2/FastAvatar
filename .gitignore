@@ -40,3 +40,7 @@ results/
 tmp/
 temp/
 EOF
+
+# ssh
+ssh
+ssh.pub

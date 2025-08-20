@@ -122,7 +122,7 @@ FastAvatar/
     <td align="center"><b>Comparison with SOTAs</b></td>
   </tr>
   <tr>
-    <td><img src="docs/comparison.png" width="200"></td>
+    <td><img src="docs/comparison.png" width="600"></td>
 </table>
 
 
