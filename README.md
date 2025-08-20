@@ -9,10 +9,9 @@
 We introduce FastAvatar, which achieves real-time 3D face reconstruction from a single image under unconstrained poses, combining high fidelity with speed.
 
 ### Key Features
-- 🎯 **Pose-invariant face encoding**
-- 🔧 **Single-shot Gaussian Splatting** with learnable parameters
-- 📊 **Multi-view consistency** through COLMAP integration
-- ⚡ **Real-time rendering** capabilities
+- 🎯 **Pose-invariant 3D face reconstruction** *FastAvatar takes input photo from any pose.*
+- 🔧 **Single-shot Gaussian Splatting** *FastAvatar requires only one input photo.*
+- ⚡ **Real-time fitting** *FastAvatar is feed-forward, generalizable.*
 
 ## Quick Start
 
