@@ -1,7 +1,7 @@
 # FastAvatar: Instant 3D Gaussian Splatting for Faces from Single Unconstrained Poses
 
-[![Python](https://img.shields.io/badge/Python-3.8%2B-blue)](https://www.python.org/)
-[![PyTorch](https://img.shields.io/badge/PyTorch-2.0%2B-red)](https://pytorch.org/)
+[![Python](https://img.shields.io/badge/Python-3.10%2B-blue)](https://www.python.org/)
+[![PyTorch](https://img.shields.io/badge/PyTorch-2.1%2B-red)](https://pytorch.org/)
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
 ## Overview
@@ -39,12 +39,8 @@ pip install -r requirements.txt
 ```
 
 ### Download Pretrained Models
-Pretrained models can be downloaded **[here](https://drive.google.com/file/d/1SQOx8kHnnaqaCv_PjUqbVMYRzUOtUZuM/view?usp=sharing)**
-```bash
-
-# Download pretrained encoder, decoder and canonical model
-# Unzip and place them in pretrained_weights/
-```
+Pretrained models can be downloaded **[here](https://drive.google.com/file/d/1SQOx8kHnnaqaCv_PjUqbVMYRzUOtUZuM/view?usp=sharing)**,
+Unzip and place them in pretrained_weights/
 
 ## Basic Usage
 
@@ -64,7 +60,7 @@ python scripts/inference.py \
     --pos_reg 0.001
 
 # Using different LPIPS network
-python src/train.py --sample_id 306 --lpips_net vgg
+python scripts/inference.py --sample_id 306 --lpips_net vgg
 ```
 
 ### Data Preparation
