@@ -53,9 +53,9 @@ mkdir -p data
 # Place them in pretrained_weights/
 ```
 
-## 💻 Basic Usage
+## Basic Usage
 
-### Training
+### Inference
 
 ```python
 # Basic training with default parameters
@@ -89,15 +89,6 @@ data/
 │   └── poses_bounds.npy  # (optional) Camera bounds
 ```
 
-### Inference
-
-```python
-# Load pretrained model and run inference
-python src/inference.py \
-    --checkpoint path/to/checkpoint.pth \
-    --input_image path/to/face.jpg \
-    --output_dir results/
-```
 
 ## 📁 Project Structure
 
@@ -127,7 +118,7 @@ FastAvatar/
 
 
 
-## 🙏 Acknowledgments
+## Acknowledgments
 
 This project builds upon several excellent open-source projects:
 
@@ -138,7 +129,7 @@ This project builds upon several excellent open-source projects:
 
 Special thanks to the authors of these works for making their code publicly available.
 
-## 📝 Citation
+## Citation
 
 If you find this work useful for your research, please consider citing:
 
@@ -147,11 +138,11 @@ If you find this work useful for your research, please consider citing:
 ```
 
 
-## 🤝 Contributing
+## Contributing
 
 Contributions are welcome! Please feel free to submit a Pull Request. For major changes, please open an issue first to discuss what you would like to change.
 
-## 📄 License
+## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 

@@ -1,4 +1,3 @@
-#hp_SSWjS0Q6KuAaCFgG3sCMvVNzExQPS73p5rCA
 """
 Gaussian Splatting Training and Inference Module
 ================================================
@@ -46,7 +45,7 @@ class TrainingConfig:
     
     # Data paths
     data_root: str = "data"
-    ply_file_path: str = "data/averaged_model.ply"
+    ply_file_path: str = "pretrained_weights/averaged_model.ply"
     save_path: str = "results"
     encoder_load_path: str = "pretrained_weights/encoder_neutral_flame.pth"
     decoder_load_path: str = "pretrained_weights/decoder_neutral_flame.pth"
