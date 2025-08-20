@@ -4,7 +4,7 @@
 [![PyTorch](https://img.shields.io/badge/PyTorch-2.0%2B-red)](https://pytorch.org/)
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
-## 📋 Overview
+## Overview
 
 We introduce FastAvatar, which achieves real-time 3D face reconstruction from a single image under unconstrained poses, combining high fidelity with speed.
 
@@ -14,12 +14,11 @@ We introduce FastAvatar, which achieves real-time 3D face reconstruction from a 
 - 📊 **Multi-view consistency** through COLMAP integration
 - ⚡ **Real-time rendering** capabilities
 
-## 🚀 Quick Start
+## Quick Start
 
 ### Prerequisites
-- Python 3.8 or higher
-- CUDA 11.8 or higher (for GPU support)
-- COLMAP (for data preprocessing)
+- Python 3.10 or higher
+- CUDA 12.1 or higher (for GPU support)
 
 ### Installation
 
@@ -29,17 +28,14 @@ git clone https://github.com/hliang2/FastAvatar.git
 cd FastAvatar
 
 # Create virtual environment
-python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
+conda create --name fastavatar -y python=3.10
+conda activate fastavatar
 
 # Install PyTorch (adjust CUDA version as needed)
-pip install torch torchvision --index-url https://download.pytorch.org/whl/cu118
+pip install torch==2.1.0+cu121 torchvision==0.16.0+cu121 --index-url https://download.pytorch.org/whl/cu121
 
 # Install dependencies
 pip install -r requirements.txt
-
-# Install gsplat (Gaussian Splatting rasterizer)
-pip install git+https://github.com/nerfstudio-project/gsplat.git
 ```
 
 ### Download Pretrained Models
@@ -47,7 +43,6 @@ pip install git+https://github.com/nerfstudio-project/gsplat.git
 ```bash
 # Create directories
 mkdir -p pretrained_weights
-mkdir -p data
 
 # Download pretrained encoder and decoder (links to be added)
 # Place them in pretrained_weights/
@@ -106,7 +101,7 @@ FastAvatar/
 ```
 
 
-## 📊 Results
+## Results
 
 <table>
   <tr>
