@@ -79,7 +79,7 @@ data/
 ```
 
 
-## 📁 Project Structure
+## Project Structure
 
 ```
 FastAvatar/
@@ -111,7 +111,6 @@ FastAvatar/
 
 This project builds upon several excellent open-source projects:
 
-- **[3D Gaussian Splatting](https://github.com/graphdeco-inria/gaussian-splatting)** - The foundational 3D Gaussian Splatting paper and implementation by Kerbl et al.
 - **[gsplat](https://github.com/nerfstudio-project/gsplat)** - Efficient CUDA kernels for differentiable Gaussian rasterization from Nerfstudio
 - **[InsightFace](https://github.com/deepinsight/insightface)** - State-of-the-art face analysis toolkit for face recognition and embedding
 - **[VHAP](https://github.com/ShenhanQian/VHAP)** - Head Tracking with FLAME
