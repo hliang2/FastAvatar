@@ -31,7 +31,7 @@ conda create --name fastavatar -y python=3.10
 conda activate fastavatar
 
 # Install PyTorch (adjust CUDA version as needed)
-# Igore the package warnings at this step, will be fixed after requirements installed
+# Ignore the package warnings at this step, will be fixed after requirements installed
 pip install torch==2.1.0+cu121 torchvision==0.16.0+cu121 --index-url https://download.pytorch.org/whl/cu121
 
 # Install dependencies
