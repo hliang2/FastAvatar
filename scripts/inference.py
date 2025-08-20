@@ -134,6 +134,10 @@ class GaussianSplattingTrainer:
         self.current_epoch = 0
         self.global_step = 0
         
+        # Store camera parameters for final rendering
+        self.current_camtoworlds = None
+        self.current_Ks = None
+        
     def _initialize_models(self):
         """Initialize encoder and decoder models."""
         print("Initializing models...")
@@ -412,6 +416,11 @@ class GaussianSplattingTrainer:
         embedding = data["embedding"].to(device)
         means_3d = data["means"].to(device)
         
+        # Store camera parameters for final rendering
+        self.current_camtoworlds = camtoworlds
+        self.current_Ks = Ks
+        self.current_means_3d = means_3d
+        
         # Get image dimensions
         height, width = self.cfg.image_height, self.cfg.image_width
         
@@ -598,13 +607,25 @@ class GaussianSplattingTrainer:
             
             # Save final outputs for this view
             if hasattr(self, 'current_splats'):
-                self._save_outputs(
-                    renders=torch.zeros(1, self.cfg.image_height, self.cfg.image_width, 3),
-                    splats=self.current_splats,
-                    view_idx=view_idx,
-                    step=self.cfg.max_epochs - 1,
-                    prefix="final"
-                )
+                # Render final image using the same camera parameters
+                with torch.no_grad():
+                    self.decoder.eval()
+                    final_renders, final_alphas, _ = self.rasterize_splats(
+                        splats=self.current_splats,
+                        camtoworlds=self.current_camtoworlds,
+                        Ks=self.current_Ks,
+                        width=self.cfg.image_width,
+                        height=self.cfg.image_height,
+                    )
+                    
+                    # Save the actual rendered image and PLY
+                    self._save_outputs(
+                        renders=final_renders,
+                        splats=self.current_splats,
+                        view_idx=view_idx,
+                        step=self.cfg.max_epochs - 1,
+                        prefix="final"
+                    )
         
         print("\nTraining completed!")
         print(f"Results saved to: {self.cfg.save_path}")
@@ -788,22 +809,22 @@ if __name__ == "__main__":
     Usage examples:
     
     # Basic usage with defaults
-    python train.py
+    python scripts/inference.py
     
     # Custom sample and epochs
-    python train.py --sample_id 200 --max_epochs 1000
+    python scripts/inference.py --sample_id 200 --max_epochs 1000
     
     # Custom learning rates
-    python train.py --mlp_lr 2e-4 --w_lr 5e-5
+    python scripts/inference.py --mlp_lr 2e-4 --w_lr 5e-5
     
     # With regularization
-    python train.py --scale_reg 0.01 --pos_reg 0.001
+    python scripts/inference.py --scale_reg 0.01 --pos_reg 0.001
     
     # Custom paths
-    python train.py --data_root /path/to/data --save_path /path/to/results
+    python scripts/inference.py --data_root /path/to/data --save_path /path/to/results
     
     # Enable packed mode and sparse gradients
-    python train.py --packed --sparse_grad
+    python scripts/inference.py --packed --sparse_grad
     
     # Different LPIPS network
     python train.py --lpips_net vgg
