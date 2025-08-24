@@ -10,7 +10,7 @@ import os
 import time
 from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Dict, Optional, Tuple, Any
+from typing import Dict, Optional, Tuple, Any, List
 
 import numpy as np
 import torch
@@ -134,9 +134,8 @@ class GaussianSplattingTrainer:
         self.current_epoch = 0
         self.global_step = 0
         
-        # Store camera parameters for final rendering
-        self.current_camtoworlds = None
-        self.current_Ks = None
+        # Store all camera parameters from training set
+        self.current_training_view_idx = None
         
     def _initialize_models(self):
         """Initialize encoder and decoder models."""
@@ -214,7 +213,20 @@ class GaussianSplattingTrainer:
             pin_memory=True,
         )
         
+        # Collect all camera parameters from the dataset
+        print("Collecting all camera parameters...")
+        self.all_cameras = []
+        for idx, data in enumerate(self.trainloader):
+            camera_info = {
+                'camtoworlds': data["camtoworlds"].float().to(device),
+                'K': data["K"].float().to(device),
+                'means_3d': data["means"].to(device),
+                'view_idx': idx + 1
+            }
+            self.all_cameras.append(camera_info)
+        
         print(f"Dataset loaded: {len(self.trainset)} samples")
+        print(f"Collected {len(self.all_cameras)} camera viewpoints")
     
     def _setup_optimizers(self):
         """Setup optimizers for training."""
@@ -336,6 +348,54 @@ class GaussianSplattingTrainer:
         
         return render_colors, render_alphas, info
     
+    def render_all_views(
+        self,
+        splats: Dict[str, torch.Tensor],
+        prefix: str,
+        training_view: int,
+        step: int
+    ):
+        """
+        Render splats from all camera viewpoints and save images.
+        
+        Args:
+            splats: Dictionary containing splat parameters
+            prefix: Prefix for saved files (e.g., "initial" or "final")
+            training_view: The view index that was used for training
+            step: Current training step
+        """
+        print(f"Rendering {prefix} images from all {len(self.all_cameras)} viewpoints...")
+        
+        for camera_info in self.all_cameras:
+            view_idx = camera_info['view_idx']
+            camtoworlds = camera_info['camtoworlds']
+            Ks = camera_info['K']
+            
+            # Render from this viewpoint
+            renders, alphas, _ = self.rasterize_splats(
+                splats=splats,
+                camtoworlds=camtoworlds,
+                Ks=Ks,
+                width=self.cfg.image_width,
+                height=self.cfg.image_height,
+            )
+            
+            # Mark if this was the training view
+            view_suffix = f"trainview{training_view:02d}_renderviewr{view_idx:02d}"
+            if view_idx == training_view:
+                view_suffix += "_TRAINED"
+            
+            # Save rendered image
+            image_path = self.dirs['images'] / f"{prefix}_{view_suffix}_step{step:06d}.png"
+            save_image(
+                renders.squeeze(0).permute(2, 0, 1),
+                str(image_path)
+            )
+        
+        # Save PLY file once (same for all views)
+        ply_path = self.dirs['ply'] / f"{prefix}_trainview{training_view:02d}_step{step:06d}.ply"
+        save_ply(splats, str(ply_path), None)
+    
     def compute_losses(
         self,
         renders: torch.Tensor,
@@ -416,10 +476,8 @@ class GaussianSplattingTrainer:
         embedding = data["embedding"].to(device)
         means_3d = data["means"].to(device)
         
-        # Store camera parameters for final rendering
-        self.current_camtoworlds = camtoworlds
-        self.current_Ks = Ks
-        self.current_means_3d = means_3d
+        # Store current training view
+        self.current_training_view_idx = view_idx
         
         # Get image dimensions
         height, width = self.cfg.image_height, self.cfg.image_width
@@ -434,7 +492,7 @@ class GaussianSplattingTrainer:
             # Regular training step
             return self._training_step(
                 means_3d, camtoworlds, Ks,
-                width, height, gt_pixels, epoch
+                width, height, gt_pixels, epoch, view_idx
             )
     
     def _initial_setup(
@@ -465,19 +523,12 @@ class GaussianSplattingTrainer:
             splats, _ = self.decoder(self.w_vectors, 0)
             splats["means"] = means_3d.squeeze(0) + splats["means"]
             
-            # Render initial image
-            renders, alphas, _ = self.rasterize_splats(
+            # Render from all viewpoints for initial state
+            self.render_all_views(
                 splats=splats,
-                camtoworlds=camtoworlds,
-                Ks=Ks,
-                width=width,
-                height=height,
-            )
-            
-            # Save initial outputs
-            self._save_outputs(
-                renders, splats, view_idx, 0,
-                prefix="initial"
+                prefix="initial",
+                training_view=view_idx,
+                step=0
             )
         
         # Setup optimizers for this view
@@ -505,7 +556,8 @@ class GaussianSplattingTrainer:
         width: int,
         height: int,
         gt_pixels: torch.Tensor,
-        epoch: int
+        epoch: int,
+        view_idx: int
     ) -> Dict[str, float]:
         """
         Regular training step.
@@ -551,30 +603,11 @@ class GaussianSplattingTrainer:
                 self.mlp_optimizer.step()
                 self.mlp_optimizer.zero_grad()
         
-        # Store splats for saving
+        # Store splats and current means for final rendering
         self.current_splats = splats
+        self.current_means_3d = means_3d
         
         return {k: v.item() for k, v in losses.items()}
-    
-    def _save_outputs(
-        self,
-        renders: torch.Tensor,
-        splats: Dict[str, torch.Tensor],
-        view_idx: int,
-        step: int,
-        prefix: str = "render"
-    ):
-        """Save rendered images and point clouds."""
-        # Save rendered image
-        image_path = self.dirs['images'] / f"{prefix}_view{view_idx:04d}_step{step:06d}.png"
-        save_image(
-            renders.squeeze(0).permute(2, 0, 1),
-            str(image_path)
-        )
-        
-        # Save PLY file
-        ply_path = self.dirs['ply'] / f"{prefix}_view{view_idx:04d}_step{step:06d}.ply"
-        save_ply(splats, str(ply_path), None)
     
     def run(self):
         """Main training loop."""
@@ -582,13 +615,13 @@ class GaussianSplattingTrainer:
         
         for view_idx, data in enumerate(self.trainloader, 1):
             print(f"\n{'='*50}")
-            print(f"Processing view {view_idx}/{len(self.trainloader)}")
+            print(f"Training on view {view_idx}/{len(self.trainloader)}")
             print(f"{'='*50}")
             
             # Progress bar for epochs
             pbar = tqdm.tqdm(
                 range(self.cfg.max_epochs),
-                desc=f"View {view_idx}"
+                desc=f"Training View {view_idx}"
             )
             
             for epoch in pbar:
@@ -605,30 +638,26 @@ class GaussianSplattingTrainer:
                 
                 self.global_step += 1
             
-            # Save final outputs for this view
+            # Save final outputs for this view from all camera angles
             if hasattr(self, 'current_splats'):
-                # Render final image using the same camera parameters
                 with torch.no_grad():
                     self.decoder.eval()
-                    final_renders, final_alphas, _ = self.rasterize_splats(
-                        splats=self.current_splats,
-                        camtoworlds=self.current_camtoworlds,
-                        Ks=self.current_Ks,
-                        width=self.cfg.image_width,
-                        height=self.cfg.image_height,
-                    )
                     
-                    # Save the actual rendered image and PLY
-                    self._save_outputs(
-                        renders=final_renders,
-                        splats=self.current_splats,
-                        view_idx=view_idx,
-                        step=self.cfg.max_epochs - 1,
-                        prefix="final"
+                    # The current_splats already have means added for the training view
+                    # We need to render from all views with proper means adjustment
+                    final_splats = self.current_splats.copy()
+                    
+                    # Render from all viewpoints for final state
+                    self.render_all_views(
+                        splats=final_splats,
+                        prefix="final",
+                        training_view=view_idx,
+                        step=self.cfg.max_epochs - 1
                     )
         
         print("\nTraining completed!")
         print(f"Results saved to: {self.cfg.save_path}")
+        print(f"Each training view has been rendered from all {len(self.all_cameras)} camera angles")
 
 
 def create_config_from_args() -> TrainingConfig:
@@ -827,6 +856,6 @@ if __name__ == "__main__":
     python scripts/inference.py --packed --sparse_grad
     
     # Different LPIPS network
-    python train.py --lpips_net vgg
+    python scripts/inference.py --lpips_net vgg
     """
     main()
