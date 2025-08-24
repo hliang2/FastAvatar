@@ -1,0 +1,97 @@
+/* Custom styles for FastAvatar project page */
+
+:root {
+    --primary-color: #007bff;
+    --secondary-color: #6c757d;
+    --dark-color: #343a40;
+    --light-bg: #f8f9fa;
+}
+
+body {
+    font-family: 'Helvetica Neue', Arial, sans-serif;
+    padding-top: 56px; /* For fixed navbar */
+}
+
+/* Hero Section */
+.hero-section {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    min-height: 400px;
+}
+
+.hero-section h1 {
+    font-weight: 700;
+    text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+}
+
+.authors a {
+    color: white;
+    text-decoration: none;
+    margin: 0 10px;
+    font-size: 1.1rem;
+}
+
+.authors a:hover {
+    text-decoration: underline;
+}
+
+/* Sections */
+section {
+    scroll-margin-top: 70px; /* For navbar offset */
+}
+
+/* Model Viewer */
+.model-viewer {
+    background: #f0f0f0;
+    border-radius: 8px;
+    position: relative;
+    overflow: hidden;
+}
+
+/* Cards */
+.card {
+    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    transition: transform 0.3s;
+}
+
+.card:hover {
+    transform: translateY(-5px);
+}
+
+/* Buttons */
+.btn {
+    padding: 10px 20px;
+    font-weight: 500;
+    border-radius: 25px;
+}
+
+/* Code blocks */
+pre {
+    border-radius: 8px;
+    font-size: 0.9rem;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    .hero-section h1 {
+        font-size: 2.5rem;
+    }
+    
+    .authors {
+        font-size: 0.9rem;
+    }
+}
+
+/* Smooth scrolling */
+html {
+    scroll-behavior: smooth;
+}
+
+/* Image hover effects */
+img {
+    transition: transform 0.3s;
+}
+
+img:hover {
+    transform: scale(1.02);
+}
