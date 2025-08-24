@@ -43,28 +43,30 @@
     <section class="hero-section text-center py-5">
         <div class="container">
             <h1 class="display-3 mt-5">FastAvatar</h1>
-            <h2 class="h4 text-muted">Pose-Invariant 3D Face Reconstruction via Feed-Forward Gaussian Splatting</h2>
-            <p class="lead mt-3">CVPR 2025</p>
+            <h2 class="h4" style="color: rgba(255,255,255,0.9);">Pose-Invariant 3D Face Reconstruction via Feed-Forward Gaussian Splatting</h2>
+            <p class="lead mt-3">In Submission</p>
             
             <div class="authors mt-4">
-                <a href="#">Author 1</a>, 
-                <a href="#">Author 2</a>, 
-                <a href="#">Author 3</a>
+                <a href="https://hliang2.github.io/">Hao Liang</a>, 
+                <a href="https://www.linkedin.com/in/zhixuan-ge-70507832b/">Zhixuan Ge</a>, 
+                <a href="https://sites.google.com/iitgn.ac.in/ashishtiwari/home">Ashish Tiwari</a>
+                <a href="https://sites.google.com/view/soumendu-majee/">Soumendu Majee</a>, 
+                <a href="https://scholar.google.com/citations?user=Fqbsci4AAAAJ&hl=en&oi=ao">
+G.M. Dilshan Godaliyadda</a>, 
+                <a href="https://computationalimaging.rice.edu/">Ashok Veeraraghavan</a>
+                <a href="https://www.guhabalakrishnan.com/">Guha Balakrishnan</a>
             </div>
             
             <div class="affiliations text-muted">
-                Your University
+                Rice University  and  Samsung Research America
             </div>
             
             <div class="buttons mt-4">
                 <a href="#" class="btn btn-primary btn-lg me-2">
                     <i class="fas fa-file-pdf"></i> Paper
                 </a>
-                <a href="#" class="btn btn-secondary btn-lg me-2">
+                <a href="https://github.com/hliang2/FastAvatar" class="btn btn-secondary btn-lg me-2">
                     <i class="fab fa-github"></i> Code
-                </a>
-                <a href="#" class="btn btn-info btn-lg">
-                    <i class="fas fa-database"></i> Dataset
                 </a>
             </div>
         </div>
@@ -75,7 +77,7 @@
         <div class="container">
             <div class="row justify-content-center">
                 <div class="col-lg-10">
-                    <img src="assets/images/teaser.png" class="img-fluid rounded shadow" alt="Teaser">
+                    <img src="assets/images/teaser.pdf" class="img-fluid rounded shadow" alt="Teaser">
                     <p class="text-center mt-3 text-muted">
                         Our method reconstructs high-quality 3D faces from single images in just 10ms, 
                         regardless of input viewpoint.
@@ -108,7 +110,7 @@
             <h2 class="text-center mb-4">Method Overview</h2>
             <div class="row justify-content-center">
                 <div class="col-lg-10">
-                    <img src="assets/images/method.png" class="img-fluid rounded shadow" alt="Method">
+                    <img src="assets/images/method.pdf" class="img-fluid rounded shadow" alt="Method">
                 </div>
             </div>
             <div class="row mt-4">
@@ -151,10 +153,10 @@
                             <h5 class="card-title">3D Reconstruction</h5>
                             <div id="model-viewer-1" class="model-viewer" style="height: 400px;"></div>
                             <div class="text-center mt-2">
-                                <button class="btn btn-sm btn-primary" onclick="loadModel('model1.ply', 'model-viewer-1')">
+                                <button class="btn btn-sm btn-primary" onclick="loadModel('ff.ply', 'model-viewer-1')">
                                     Load Model 1
                                 </button>
-                                <button class="btn btn-sm btn-primary" onclick="loadModel('model2.ply', 'model-viewer-1')">
+                                <button class="btn btn-sm btn-primary" onclick="loadModel('full.ply', 'model-viewer-1')">
                                     Load Model 2
                                 </button>
                             </div>
@@ -185,13 +187,13 @@
             
             <div class="tab-content">
                 <div id="comparison" class="tab-pane fade show active">
-                    <img src="assets/images/comparison.png" class="img-fluid">
+                    <img src="assets/images/comparison.pdf" class="img-fluid">
                 </div>
                 <div id="ablation" class="tab-pane fade">
-                    <img src="assets/images/ablation.png" class="img-fluid">
+                    <img src="assets/images/ablation.pdf" class="img-fluid">
                 </div>
                 <div id="latent" class="tab-pane fade">
-                    <img src="assets/images/latent.png" class="img-fluid">
+                    <img src="assets/images/latent.pdf" class="img-fluid">
                 </div>
             </div>
         </div>
