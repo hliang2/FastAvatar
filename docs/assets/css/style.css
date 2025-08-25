@@ -40,23 +40,31 @@ section {
     scroll-margin-top: 70px; /* For navbar offset */
 }
 
-/* Model Viewer */
+/* Model Viewer - Universal container */
 .model-viewer {
     background: #f0f0f0;
     border-radius: 8px;
     position: relative;
     overflow: hidden;
+    height: 400px; /* Fixed height for consistency */
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 
-.model-viewer img, 
-.input-viewer img {
-  max-height: 480px;   /* adjust to taste */
-  width: auto;
-  display: block;
-  margin: 0 auto;
-  object-fit: contain;
+/* Images in viewers */
+.model-viewer img {
+    max-width: 100%;
+    max-height: 100%;
+    width: auto;
+    height: auto;
+    object-fit: contain;
 }
 
+/* Ensure 3D canvas fills container */
+.model-viewer canvas {
+    display: block !important;
+}
 /* Cards */
 .card {
     box-shadow: 0 4px 6px rgba(0,0,0,0.1);
