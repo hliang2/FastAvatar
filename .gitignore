@@ -11,6 +11,7 @@ ENV/
 .venv
 
 # Data and models
+*.ply
 *.pth
 *.ckpt
 

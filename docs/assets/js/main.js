@@ -49,64 +49,44 @@ function init3DViewer(containerId) {
     animate(containerId);
 }
 
-// Load PLY model
+// Load GLB model
 function loadModel(modelPath, containerId) {
-    const loader = new THREE.PLYLoader();
-    const scene = scenes[containerId];
-    
-    // Clear previous model
-    const oldModel = scene.getObjectByName('model');
-    if (oldModel) {
-        scene.remove(oldModel);
+  const loader = new THREE.GLTFLoader();
+  const scene = scenes[containerId];
+  const container = document.getElementById(containerId);
+
+  // remove previous model
+  const oldModel = scene.getObjectByName('model');
+  if (oldModel) scene.remove(oldModel);
+
+  // spinner
+  const spinner = addSpinner(container);
+
+  loader.load(
+    `assets/models/${modelPath}`,
+    function (gltf) {
+      if (spinner) spinner.remove();
+
+      const model = gltf.scene;
+      model.name = 'model';
+
+      // center & scale like before
+      const box = new THREE.Box3().setFromObject(model);
+      const center = box.getCenter(new THREE.Vector3());
+      model.position.sub(center);
+
+      const size = box.getSize(new THREE.Vector3());
+      const maxDim = Math.max(size.x, size.y, size.z) || 1.0;
+      model.scale.setScalar(2 / maxDim);
+
+      scene.add(model);
+    },
+    undefined,
+    function (error) {
+      console.error('Error loading model:', error);
+      if (spinner) { spinner.textContent = 'Error loading model'; }
     }
-
-    // Show loading indicator
-    const container = document.getElementById(containerId);
-    container.innerHTML += '<div class="loading-spinner">Loading...</div>';
-
-    loader.load(
-        'assets/models/' + modelPath,
-        function (geometry) {
-            // Remove loading indicator
-            const spinner = container.querySelector('.loading-spinner');
-            if (spinner) spinner.remove();
-
-            geometry.computeVertexNormals();
-
-            // Create material
-            const material = new THREE.MeshPhongMaterial({
-                color: 0xffffff,
-                specular: 0x111111,
-                shininess: 200,
-                vertexColors: true
-            });
-
-            // Create mesh
-            const mesh = new THREE.Mesh(geometry, material);
-            mesh.name = 'model';
-            
-            // Center the model
-            geometry.computeBoundingBox();
-            const center = geometry.boundingBox.getCenter(new THREE.Vector3());
-            mesh.position.sub(center);
-            
-            // Scale to fit
-            const size = geometry.boundingBox.getSize(new THREE.Vector3());
-            const maxDim = Math.max(size.x, size.y, size.z);
-            const scale = 2 / maxDim;
-            mesh.scale.setScalar(scale);
-
-            scene.add(mesh);
-        },
-        function (xhr) {
-            console.log((xhr.loaded / xhr.total * 100) + '% loaded');
-        },
-        function (error) {
-            console.error('Error loading model:', error);
-            const spinner = container.querySelector('.loading-spinner');
-            if (spinner) spinner.innerHTML = 'Error loading model';
-        }
-    );
+  );
 }
 
 // Animation loop
