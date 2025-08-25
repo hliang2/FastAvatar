@@ -1,3 +1,7 @@
+import * as THREE from 'https://unpkg.com/three@0.160.0/build/three.module.js';
+import { OrbitControls } from 'https://unpkg.com/three@0.160.0/examples/jsm/controls/OrbitControls.js';
+import { GLTFLoader } from 'https://unpkg.com/three@0.160.0/examples/jsm/loaders/GLTFLoader.js';
+
 // Global variables for Three.js
 let scenes = {};
 let cameras = {};
@@ -50,27 +54,44 @@ function init3DViewer(containerId) {
 }
 
 // Load GLB model
-function loadModel(modelPath, containerId) {
-  const loader = new THREE.GLTFLoader();
+function resolveModelPath(p) {
+  // allow absolute URLs or leading slash; otherwise read from assets/models/
+  if (p.startsWith('http://') || p.startsWith('https://') || p.startsWith('/')) return p;
+  return `assets/models/${p}`;
+}
+
+function addSpinner(container) {
+  let s = container.querySelector('.loading-spinner');
+  if (!s) {
+    s = document.createElement('div');
+    s.className = 'loading-spinner';
+    s.textContent = 'Loading...';
+    s.style.position = 'absolute';
+    s.style.left = '50%';
+    s.style.top  = '50%';
+    s.style.transform = 'translate(-50%, -50%)';
+    container.appendChild(s);
+  }
+  return s;
+}
+
+export function loadModel(modelPath, containerId) {
   const scene = scenes[containerId];
   const container = document.getElementById(containerId);
-
-  // remove previous model
-  const oldModel = scene.getObjectByName('model');
-  if (oldModel) scene.remove(oldModel);
-
-  // spinner
   const spinner = addSpinner(container);
 
-  loader.load(
-    `assets/models/${modelPath}`,
-    function (gltf) {
-      if (spinner) spinner.remove();
+  // remove previous model if any
+  const old = scene.getObjectByName('model');
+  if (old) scene.remove(old);
 
+  const loader = new GLTFLoader();
+  loader.load(
+    resolveModelPath(modelPath),
+    (gltf) => {
+      spinner.remove();
       const model = gltf.scene;
       model.name = 'model';
-
-      // center & scale like before
+      // center & scale to a reasonable size
       const box = new THREE.Box3().setFromObject(model);
       const center = box.getCenter(new THREE.Vector3());
       model.position.sub(center);
@@ -82,9 +103,9 @@ function loadModel(modelPath, containerId) {
       scene.add(model);
     },
     undefined,
-    function (error) {
-      console.error('Error loading model:', error);
-      if (spinner) { spinner.textContent = 'Error loading model'; }
+    (err) => {
+      console.error('GLB load error:', err);
+      spinner.textContent = 'Error loading model';
     }
   );
 }

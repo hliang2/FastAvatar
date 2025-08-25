@@ -50,7 +50,7 @@ section {
 
 .model-viewer img, 
 .input-viewer img {
-  max-height: 250px;   /* adjust to taste */
+  max-height: 480px;   /* adjust to taste */
   width: auto;
   display: block;
   margin: 0 auto;
