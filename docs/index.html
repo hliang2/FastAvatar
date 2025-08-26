@@ -269,24 +269,24 @@
       }
     }
   </script>
-<script>
-  const v = document.getElementById('resultVideo');
-  const btnFF = document.getElementById('btnFF');
-  const btnFull = document.getElementById('btnFull');
+    <script>
+      const v = document.getElementById('resultVideo');
+      const btnFF = document.getElementById('btnFF');
+      const btnFull = document.getElementById('btnFull');
 
-  btnFF?.addEventListener('click', () => {
-    v.src = 'assets/videos/ff.mp4';
-    v.play();
-    btnFF.classList.replace('btn-outline-primary','btn-primary');
-    btnFull.classList.replace('btn-primary','btn-outline-primary');
-  });
+      btnFF?.addEventListener('click', () => {
+        v.src = 'assets/videos/ff.mp4';
+        v.play();
+        btnFF.classList.replace('btn-outline-primary','btn-primary');
+        btnFull.classList.replace('btn-primary','btn-outline-primary');
+      });
 
-  btnFull?.addEventListener('click', () => {
-    v.src = 'assets/videos/full.mp4';
-    v.play();
-    btnFull.classList.replace('btn-outline-primary','btn-primary');
-    btnFF.classList.replace('btn-primary','btn-outline-primary');
-  });
-</script>
+      btnFull?.addEventListener('click', () => {
+        v.src = 'assets/videos/full.mp4';
+        v.play();
+        btnFull.classList.replace('btn-outline-primary','btn-primary');
+        btnFF.classList.replace('btn-primary','btn-outline-primary');
+      });
+    </script>
 </body>
 </html>
