@@ -30,7 +30,6 @@ results/
 *.ipynb
 
 # Large files
-*.mp4
 *.avi
 *.mov
 *.zip
