@@ -178,20 +178,30 @@ export function loadModel(modelPath, containerId) {
                 spinner.innerHTML = '<i class="fas fa-exclamation-triangle"></i> Error loading model';
             }
         );
-    } else if (extension === 'ply') {
+   } else if (extension === 'ply') {
         loader.load(
             fullPath,
             (geometry) => {
                 spinner.remove();
-                
+
+                // Compute vertex normals if not present
+                if (!geometry.hasAttribute('normal')) {
+                    geometry.computeVertexNormals();
+                }
+
+                // Check if the PLY has color data
+                const hasColors = geometry.hasAttribute('color');
+                console.log('PLY has vertex colors:', hasColors);
+
                 // Create material for PLY
                 const material = new THREE.MeshPhongMaterial({
-                    color: 0xaaaaaa,
+                    color: hasColors ? 0xffffff : 0xcccccc,  // White if has colors, light gray otherwise
                     specular: 0x111111,
-                    shininess: 200,
-                    vertexColors: geometry.hasAttribute('color')
+                    shininess: 30,
+                    vertexColors: hasColors,  // Only use vertex colors if they exist
+                    side: THREE.DoubleSide
                 });
-                
+
                 const mesh = new THREE.Mesh(geometry, material);
                 mesh.name = 'model';
                 mesh.castShadow = true;
