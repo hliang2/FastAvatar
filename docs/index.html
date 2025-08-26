@@ -1,13 +1,3 @@
-<!-- Add this in the <head> section -->
-<script type="importmap">
-{
-  "imports": {
-    "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
-    "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
-  }
-}
-</script>
-<script src="https://cdn.jsdelivr.net/npm/@mkkellogg/gaussian-splats-3d@0.4.0/build/gaussian-splats-3d.min.js"></script>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -20,12 +10,19 @@
     
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    
-    <!-- Three.js for 3D visualization -->
-    
 
     <!-- Custom CSS -->
     <link rel="stylesheet" href="assets/css/style.css">
+    
+    <!-- Import map for Three.js -->
+    <script type="importmap">
+    {
+      "imports": {
+        "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+        "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+      }
+    }
+    </script>
 </head>
 <body>
     <!-- Navigation -->
@@ -59,8 +56,7 @@
                 <a href="https://www.linkedin.com/in/zhixuan-ge-70507832b/">Zhixuan Ge</a>
                 <a href="https://sites.google.com/iitgn.ac.in/ashishtiwari/home">Ashish Tiwari</a>
                 <a href="https://sites.google.com/view/soumendu-majee/">Soumendu Majee</a>
-                <a href="https://scholar.google.com/citations?user=Fqbsci4AAAAJ&hl=en&oi=ao">
-G.M. Dilshan Godaliyadda</a>
+                <a href="https://scholar.google.com/citations?user=Fqbsci4AAAAJ&hl=en&oi=ao">G.M. Dilshan Godaliyadda</a>
                 <a href="https://computationalimaging.rice.edu/">Ashok Veeraraghavan</a>
                 <a href="https://www.guhabalakrishnan.com/">Guha Balakrishnan</a>
             </div>
@@ -220,7 +216,6 @@ G.M. Dilshan Godaliyadda</a>
                             </h5>
                              <p class="text-muted">In Submission</p>
                              <pre class="bg-light p-3"><code>@inproceedings{****}</code></pre>
-                            
                         </div>
                     </div>
                 </div>
@@ -237,58 +232,53 @@ G.M. Dilshan Godaliyadda</a>
 
     <!-- Scripts -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
-    <!-- Remove the duplicate non-module script tag and keep only the module one -->
     <script type="module" src="assets/js/main.js"></script>
-    <script type="module">
-        import { loadModel } from './assets/js/main.js';
-        window.addEventListener('load', () => {
-            console.log('Page loaded');
-            console.log('loadModel available:', typeof loadModel);
-            console.log('window.loadModel available:', typeof window.loadModel);
-
-            // Make extra sure loadModel is global
-            if (!window.loadModel && loadModel) {
-                window.loadModel = loadModel;
-                console.log('Manually set window.loadModel');
-            }
-        });
-    </script>
-<script>
-let splatViewer = null;
-
-function loadSplat(filename) {
-    const container = document.getElementById('gaussian-viewer');
-    container.innerHTML = '<div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);">Loading...</div>';
     
-    if (splatViewer) {
-        splatViewer.dispose();
+    <!-- Gaussian Splatting Library -->
+    <script src="https://cdn.jsdelivr.net/npm/@mkkellogg/gaussian-splats-3d@0.4.0/build/gaussian-splats-3d.min.js"></script>
+    
+    <!-- Gaussian Viewer Script -->
+    <script>
+    let splatViewer = null;
+
+    function loadSplat(filename) {
+        if (typeof GaussianSplats3D === 'undefined') {
+            console.error('GaussianSplats3D library not loaded');
+            return;
+        }
+        
+        const container = document.getElementById('gaussian-viewer');
+        container.innerHTML = '<div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);">Loading...</div>';
+        
+        if (splatViewer) {
+            splatViewer.dispose();
+        }
+        
+        splatViewer = new GaussianSplats3D.Viewer({
+            'rootElement': container,
+            'cameraUp': [0, -1, 0],
+            'initialCameraPosition': [-1, -4, 6],
+            'initialCameraLookAt': [0, 4, 0]
+        });
+        
+        splatViewer.addSplatScene('assets/models/' + filename)
+            .then(() => {
+                splatViewer.start();
+                container.innerHTML = '';
+            })
+            .catch(err => {
+                container.innerHTML = '<div style="color: red; padding: 20px;">Error loading model</div>';
+                console.error(err);
+            });
     }
-    
-    splatViewer = new GaussianSplats3D.Viewer({
-        'rootElement': container,
-        'cameraUp': [0, -1, 0],
-        'initialCameraPosition': [-1, -4, 6],
-        'initialCameraLookAt': [0, 4, 0]
-    });
-    
-    splatViewer.addSplatScene('assets/models/' + filename)
-        .then(() => {
-            splatViewer.start();
-            container.innerHTML = '';
-        })
-        .catch(err => {
-            container.innerHTML = '<div style="color: red; padding: 20px;">Error loading model</div>';
-            console.error(err);
-        });
-}
 
-window.addEventListener('load', () => {
-    setTimeout(() => loadSplat('ff.ply'), 500);
-});
-</script>
+    window.addEventListener('load', () => {
+        setTimeout(() => {
+            if (typeof GaussianSplats3D !== 'undefined') {
+                loadSplat('ff.ply');
+            }
+        }, 1000);
+    });
+    </script>
 </body>
-<script>
-console.log('Current path:', window.location.pathname);
-console.log('Script base:', document.currentScript?.src);
-</script>
 </html>
