@@ -141,16 +141,15 @@
         <div class="row align-items-center">
 
           <!-- Left: Input view image -->
-          <div class="col-lg-5 mb-4 mb-lg-0">
-            <div class="card shadow-sm">
-              <div class="card-body">
-                <h5 class="card-title mb-3">Input Image</h5>
-                <img src="assets/images/input1.png"
-                     width="802" height="550"
-                     class="img-fluid rounded"
-                     alt="Input view">
-                <div class="text-muted small mt-2">
-                  Single input view used to reconstruct the avatar.
+          <div class="col-lg-5 mb-4">
+              <div class="card">
+                <div class="card-body text-center">
+                  <h5 class="card-title">Input Image</h5>
+                  <img src="assets/images/input1.png" 
+                       class="img-fluid rounded shadow" 
+                       alt="Input Image"
+                       style="max-width: 80%; height: auto; margin: 0 auto;" />
+                  <p class="text-muted small mt-2">Single input view used to reconstruct the avatar.</p>
                 </div>
               </div>
             </div>
@@ -177,11 +176,11 @@
                 <div class="text-center mt-3 thumb-btns">
                   <button class="btn btn-primary me-2"
                           onclick="swapVideo('assets/videos/ff.mp4', this)">
-                    Feed-Forward (10 ms)
+                    Feed-forward (10 ms)
                   </button>
                   <button class="btn btn-outline-primary"
                           onclick="swapVideo('assets/videos/full.mp4', this)">
-                    Full (10 s refine)
+                    Full optimization(3 s refine)
                   </button>
                 </div>
 
