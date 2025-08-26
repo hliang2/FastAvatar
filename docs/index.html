@@ -238,55 +238,41 @@
     <script src="https://unpkg.com/@mkkellogg/gaussian-splats-3d@0.4.3/build/gaussian-splats-3d.umd.cjs"></script>
     
     <!-- Gaussian Viewer Script -->
-    <script>
-    let splatViewer = null;
+    <script type="module">
+    import * as GaussianSplats3D from 'https://unpkg.com/@mkkellogg/gaussian-splats-3d@0.4.3/build/gaussian-splats-3d.module.js';
 
-    // Wait for library to load
-    function waitForLibrary(callback) {
-        if (typeof GaussianSplats3D !== 'undefined') {
-            callback();
-        } else {
-            setTimeout(() => waitForLibrary(callback), 100);
+    window.GaussianSplats3D = GaussianSplats3D;
+
+    window.loadSplat = function(filename) {
+        const container = document.getElementById('gaussian-viewer');
+        container.innerHTML = '<div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);">Loading...</div>';
+
+        if (window.splatViewer) {
+            window.splatViewer.dispose();
         }
+
+        window.splatViewer = new GaussianSplats3D.Viewer({
+            'rootElement': container,
+            'cameraUp': [0, -1, 0],
+            'initialCameraPosition': [-1, -4, 6],
+            'initialCameraLookAt': [0, 4, 0]
+        });
+
+        window.splatViewer.addSplatScene('assets/models/' + filename)
+            .then(() => {
+                window.splatViewer.start();
+            })
+            .catch(err => {
+                container.innerHTML = '<div style="color: red; padding: 20px;">Error: ' + err.message + '</div>';
+            });
     }
 
-    function loadSplat(filename) {
-        waitForLibrary(() => {
-            const container = document.getElementById('gaussian-viewer');
-            container.innerHTML = '<div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);">Loading...</div>';
-
-            if (splatViewer) {
-                splatViewer.dispose();
-                splatViewer = null;
-            }
-
-            try {
-                splatViewer = new GaussianSplats3D.Viewer({
-                    'rootElement': container,
-                    'cameraUp': [0, -1, 0],
-                    'initialCameraPosition': [-1, -4, 6],
-                    'initialCameraLookAt': [0, 4, 0]
-                });
-
-                splatViewer.addSplatScene('assets/models/' + filename)
-                    .then(() => {
-                        splatViewer.start();
-                    })
-                    .catch(err => {
-                        container.innerHTML = '<div style="color: red; padding: 20px;">Error: ' + err.message + '</div>';
-                    });
-            } catch (e) {
-                container.innerHTML = '<div style="color: red; padding: 20px;">Failed to create viewer: ' + e.message + '</div>';
-            }
-        });
-    }
-
-    window.addEventListener('DOMContentLoaded', () => {
-        waitForLibrary(() => {
-            console.log('GaussianSplats3D loaded');
-            loadSplat('ff.ply');
-        });
-    });
+    // Load default on ready
+    setTimeout(() => {
+        if (window.GaussianSplats3D) {
+            window.loadSplat('ff.ply');
+        }
+    }, 1000);
     </script>
 </body>
 </html>
