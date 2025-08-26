@@ -151,10 +151,10 @@ G.M. Dilshan Godaliyadda</a>
                             <h5 class="card-title">3D Reconstruction</h5>
                             <div id="model-viewer-1" class="model-viewer" style="height: 400px;"></div>
                             <div class="text-center mt-2">
-                                <button class="btn btn-sm btn-primary" onclick="loadModel('ff.glb', 'model-viewer-1')">
+                                <button class="btn btn-sm btn-primary" onclick="if(window.loadModel) loadModel('ff.glb', 'model-viewer-1'); else console.error('loadModel not ready');">
                                     Load Model 1
                                 </button>
-                                <button class="btn btn-sm btn-primary" onclick="loadModel('full.glb', 'model-viewer-1')">
+                                <button class="btn btn-sm btn-primary" onclick="if(window.loadModel) loadModel('full.glb', 'model-viewer-1'); else console.error('loadModel not ready');">
                                     Load Model 2
                                 </button>
                             </div>
@@ -229,6 +229,19 @@ G.M. Dilshan Godaliyadda</a>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
     <!-- Remove the duplicate non-module script tag and keep only the module one -->
     <script type="module" src="assets/js/main.js"></script>
-    
+    <script type="module">
+        import { loadModel } from './assets/js/main.js';
+        window.addEventListener('load', () => {
+            console.log('Page loaded');
+            console.log('loadModel available:', typeof loadModel);
+            console.log('window.loadModel available:', typeof window.loadModel);
+
+            // Make extra sure loadModel is global
+            if (!window.loadModel && loadModel) {
+                window.loadModel = loadModel;
+                console.log('Manually set window.loadModel');
+            }
+        });
+    </script>
 </body>
 </html>
