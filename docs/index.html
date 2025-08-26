@@ -1,3 +1,12 @@
+<!-- Add this in the <head> section -->
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+    "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+  }
+}
+</script>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -244,4 +253,8 @@ G.M. Dilshan Godaliyadda</a>
         });
     </script>
 </body>
+<script>
+console.log('Current path:', window.location.pathname);
+console.log('Script base:', document.currentScript?.src);
+</script>
 </html>
