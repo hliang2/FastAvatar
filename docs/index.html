@@ -13,6 +13,17 @@
 
   <!-- Custom CSS -->
   <link rel="stylesheet" href="assets/css/style.css"/>
+
+  <!-- Preload videos for smooth playback -->
+  <link rel="preload" as="video" href="assets/videos/ff.mp4" type="video/mp4">
+  <link rel="preload" as="video" href="assets/videos/full.mp4" type="video/mp4">
+
+  <style>
+    /* Solid background so no teaser shows through during swaps */
+    .video-wrapper { background: #000; border-radius: 8px; overflow: hidden; }
+    .video-wrapper video { display:block; width:100%; height:auto; }
+    .thumb-btns .btn { min-width: 140px; }
+  </style>
 </head>
 <body>
   <!-- Navigation -->
@@ -125,48 +136,65 @@
 
   <!-- Demo (Video) -->
   <section id="demo" class="py-5">
-    <div class="container">
-      <h2 class="text-center mb-4">Demo (MP4 Playback)</h2>
-      <p class="text-center text-muted">Choose a sequence to play below.</p>
+      <div class="container">
+        <h2 class="text-center mb-4">Demo (Feed-Forward vs Full)</h2>
+        <div class="row align-items-center">
 
-      <div class="row justify-content-center">
-        <div class="col-lg-10">
-          <div class="card">
-            <div class="card-body">
-              <div class="ratio ratio-16x9">
-                <video id="demoVideo"
-                  class="w-100 rounded"
-                  preload="metadata"
-                  autoplay
-                  muted
-                  loop
-                  playsinline
-                  poster="assets/images/teaser.png">
-                  <!-- default source -->
-                  <source src="assets/videos/ff.mp4" type="video/mp4"/>
-                  Your browser does not support the video tag.
-                </video>
+          <!-- Left: Input view image -->
+          <div class="col-lg-5 mb-4 mb-lg-0">
+            <div class="card shadow-sm">
+              <div class="card-body">
+                <h5 class="card-title mb-3">Input Image</h5>
+                <img src="assets/images/input_view.png"
+                     width="802" height="550"
+                     class="img-fluid rounded"
+                     alt="Input view">
+                <div class="text-muted small mt-2">
+                  Single input view used to reconstruct the avatar.
+                </div>
               </div>
-
-              <div class="text-center mt-3">
-                <button class="btn btn-sm btn-primary me-2" onclick="swapVideo('assets/videos/ff.mp4', this)">
-                  Feed-Forward (10ms)
-                </button>
-                <button class="btn btn-sm btn-outline-primary" onclick="swapVideo('assets/videos/full.mp4', this)">
-                  Full Optimization
-                </button>
-              </div>
-
-              <p class="text-center text-muted small mt-2 mb-0">
-                Videos loop automatically and are muted for autoplay on mobile.
-              </p>
             </div>
           </div>
+
+          <!-- Right: Video player -->
+          <div class="col-lg-7">
+            <div class="card shadow-sm">
+              <div class="card-body">
+                <h5 class="card-title mb-3">Reconstruction Preview</h5>
+
+                <div class="video-wrapper">
+                  <video id="demoVideo"
+                         src="assets/videos/ff.mp4"
+                         playsinline
+                         muted
+                         loop
+                         autoplay
+                         preload="auto">
+                    Sorry, your browser doesn’t support embedded videos.
+                  </video>
+                </div>
+
+                <div class="text-center mt-3 thumb-btns">
+                  <button class="btn btn-primary me-2"
+                          onclick="swapVideo('assets/videos/ff.mp4', this)">
+                    Feed-Forward (10 ms)
+                  </button>
+                  <button class="btn btn-outline-primary"
+                          onclick="swapVideo('assets/videos/full.mp4', this)">
+                    Full (10 s refine)
+                  </button>
+                </div>
+
+                <div class="text-muted small mt-2">
+                  Videos loop silently for web compatibility; both are rendered from the same input identity.
+                </div>
+              </div>
+            </div>
+          </div>
+
         </div>
       </div>
-
-    </div>
-  </section>
+    </section>
 
   <!-- Results -->
   <section id="results" class="py-5 bg-light">
