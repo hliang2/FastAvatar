@@ -280,7 +280,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Initialize all model viewers
     const viewers = document.querySelectorAll('.model-viewer');
     viewers.forEach(viewer => {
-        if (viewer.id && viewer.id !== 'input-viewer') {
+        if (viewer.id && viewer.id !== 'input-viewer' && viewer.id !== 'gaussian-viewer') {
             console.log(`Initializing viewer: ${viewer.id}`);
             init3DViewer(viewer.id);
             
@@ -290,7 +290,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }, 100);
         }
     });
-}); 
+});
 
 
 // Add a default cube as placeholder

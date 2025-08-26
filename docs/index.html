@@ -7,6 +7,7 @@
   }
 }
 </script>
+<script src="https://cdn.jsdelivr.net/npm/@mkkellogg/gaussian-splats-3d@0.4.0/build/gaussian-splats-3d.min.js"></script>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -142,7 +143,7 @@ G.M. Dilshan Godaliyadda</a>
         <div class="container">
             <h2 class="text-center mb-4">Interactive 3D Results</h2>
             <p class="text-center text-muted">Click and drag to rotate, scroll to zoom</p>
-            
+
             <div class="row">
                 <div class="col-lg-6 mb-4">
                     <div class="card">
@@ -158,12 +159,12 @@ G.M. Dilshan Godaliyadda</a>
                     <div class="card">
                         <div class="card-body">
                             <h5 class="card-title">3D Reconstruction</h5>
-                            <div id="model-viewer-1" class="model-viewer" style="height: 400px;"></div>
+                            <div id="gaussian-viewer" style="height: 400px; background: #f0f0f0; position: relative;"></div>
                             <div class="text-center mt-2">
-                                <button class="btn btn-sm btn-primary" onclick="if(window.loadModel) loadModel('ff.ply', 'model-viewer-1'); else console.error('loadModel not ready');">
+                                <button class="btn btn-sm btn-primary" onclick="loadSplat('ff.ply')">
                                     Load Model 1
                                 </button>
-                                <button class="btn btn-sm btn-primary" onclick="if(window.loadModel) loadModel('full.ply', 'model-viewer-1'); else console.error('loadModel not ready');">
+                                <button class="btn btn-sm btn-primary" onclick="loadSplat('full.ply')">
                                     Load Model 2
                                 </button>
                             </div>
@@ -252,6 +253,39 @@ G.M. Dilshan Godaliyadda</a>
             }
         });
     </script>
+<script>
+let splatViewer = null;
+
+function loadSplat(filename) {
+    const container = document.getElementById('gaussian-viewer');
+    container.innerHTML = '<div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);">Loading...</div>';
+    
+    if (splatViewer) {
+        splatViewer.dispose();
+    }
+    
+    splatViewer = new GaussianSplats3D.Viewer({
+        'rootElement': container,
+        'cameraUp': [0, -1, 0],
+        'initialCameraPosition': [-1, -4, 6],
+        'initialCameraLookAt': [0, 4, 0]
+    });
+    
+    splatViewer.addSplatScene('assets/models/' + filename)
+        .then(() => {
+            splatViewer.start();
+            container.innerHTML = '';
+        })
+        .catch(err => {
+            container.innerHTML = '<div style="color: red; padding: 20px;">Error loading model</div>';
+            console.error(err);
+        });
+}
+
+window.addEventListener('load', () => {
+    setTimeout(() => loadSplat('ff.ply'), 500);
+});
+</script>
 </body>
 <script>
 console.log('Current path:', window.location.pathname);
