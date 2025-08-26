@@ -1,114 +1,100 @@
-/* Custom styles for FastAvatar project page */
+/* ================================
+   FastAvatar – Project Styles
+   ================================ */
 
-:root {
-    --primary-color: #007bff;
-    --secondary-color: #6c757d;
-    --dark-color: #343a40;
-    --light-bg: #f8f9fa;
+:root{
+  --primary-color:#007bff;
+  --secondary-color:#6c757d;
+  --dark-color:#343a40;
+  --light-bg:#f8f9fa;
+
+  /* one knob to keep input image + video the same height */
+  --demo-height: 420px;
 }
 
-body {
-    font-family: 'Helvetica Neue', Arial, sans-serif;
-    padding-top: 56px; /* For fixed navbar */
+html{ scroll-behavior:smooth; }
+body{
+  font-family:'Helvetica Neue', Arial, sans-serif;
+  padding-top:56px; /* fixed navbar offset */
 }
 
-/* Hero Section */
-.hero-section {
-    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
-    color: white;
-    min-height: 400px;
+/* ---------- Hero ---------- */
+.hero-section{
+  background:linear-gradient(135deg,#1a1a2e 0%,#16213e 100%);
+  color:#fff;
+  min-height:400px;
+}
+.hero-section h1{
+  font-weight:700;
+  text-shadow:2px 2px 4px rgba(0,0,0,.3);
+}
+.authors a{
+  color:#fff; text-decoration:none; margin:0 10px; font-size:1.1rem;
+}
+.authors a:hover{ text-decoration:underline; }
+
+/* ---------- Sections ---------- */
+section{ scroll-margin-top:70px; }
+
+/* ---------- Cards ---------- */
+.card{
+  box-shadow:0 4px 6px rgba(0,0,0,.08);
+  transition:transform .25s ease;
+  border-radius:12px;
+}
+.card:hover{ transform:translateY(-3px); }
+.card-title{ font-weight:600; }
+
+/* Equal-height helpers for the demo row */
+.demo-grid .col-lg-6{ display:flex; }
+.demo-grid .card{ flex:1; display:flex; }
+.demo-grid .card-body{ display:flex; flex-direction:column; }
+
+
+/* ---------- Demo: Input image box ---------- */
+.input-frame{
+  height:var(--demo-height);
+  display:flex; align-items:center; justify-content:center;
+  background:#fff; border-radius:10px;
+}
+.input-frame img{
+  max-height:100%;
+  width:auto; height:auto; object-fit:contain;
 }
 
-.hero-section h1 {
-    font-weight: 700;
-    text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+/* ---------- Demo: Video box ---------- */
+.video-frame{
+  height:var(--demo-height);
+  background:#757575; /* neutral canvas behind the video */
+  border-radius:10px;
+  display:flex; align-items:center; justify-content:center;
+  overflow:hidden;
 }
-
-.authors a {
-    color: white;
-    text-decoration: none;
-    margin: 0 10px;
-    font-size: 1.1rem;
-}
-
-.authors a:hover {
-    text-decoration: underline;
-}
-
-/* Sections */
-section {
-    scroll-margin-top: 70px; /* For navbar offset */
-}
-
-/* Model Viewer - Universal container */
-.model-viewer {
-    background: #f0f0f0;
-    border-radius: 8px;
-    position: relative;
-    overflow: hidden;
-    height: 400px; /* Fixed height for consistency */
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-
-/* Images in viewers */
-.model-viewer img {
-    max-width: 100%;
-    max-height: 100%;
-    width: auto;
-    height: auto;
-    object-fit: contain;
-}
-
-/* Ensure 3D canvas fills container */
-.model-viewer canvas {
-    display: block !important;
-}
-/* Cards */
-.card {
-    box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-    transition: transform 0.3s;
-}
-
-.card:hover {
-    transform: translateY(-5px);
+.video-frame video{
+  width:100%;
+  height:100%;
+  object-fit:cover;           /* fill the frame without bars */
+  border-radius:10px;
+  display:block;
 }
 
 /* Buttons */
-.btn {
-    padding: 10px 20px;
-    font-weight: 500;
-    border-radius: 25px;
-}
+.btn{ padding:10px 20px; font-weight:500; border-radius:25px; }
+.btn-group-gap .btn{ margin:0 .25rem; }
 
 /* Code blocks */
-pre {
-    border-radius: 8px;
-    font-size: 0.9rem;
-}
+pre{ border-radius:8px; font-size:.9rem; }
 
-/* Responsive adjustments */
-@media (max-width: 768px) {
-    .hero-section h1 {
-        font-size: 2.5rem;
-    }
-    
-    .authors {
-        font-size: 0.9rem;
-    }
-}
+/* Images (global micro-hover) */
+img{ transition:transform .25s ease; }
+img:hover{ transform:scale(1.01); }
 
-/* Smooth scrolling */
-html {
-    scroll-behavior: smooth;
+/* ---------- Responsive ---------- */
+@media (max-width: 992px){
+  :root{ --demo-height: 340px; }
 }
-
-/* Image hover effects */
-img {
-    transition: transform 0.3s;
-}
-
-img:hover {
-    transform: scale(1.02);
+@media (max-width: 576px){
+  :root{ --demo-height: 280px; }
+  .hero-section h1{ font-size:2.25rem; }
+  .authors{ font-size:.95rem; }
 }
