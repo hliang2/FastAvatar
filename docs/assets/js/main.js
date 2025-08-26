@@ -276,10 +276,12 @@ document.addEventListener('DOMContentLoaded', () => {
             
             // Load default PLY model instead of cube
             setTimeout(() => {
-                loadModel('ff.ply', viewer.id);  // or whatever your PLY file is named
-            }, 100); // Small delay to ensure initialization is complete
+                loadModel('ff.ply', viewer.id);
+            }, 100);
         }
     });
+}); 
+
 
 // Add a default cube as placeholder
 function addDefaultCube(containerId) {
