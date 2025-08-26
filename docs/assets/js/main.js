@@ -274,22 +274,12 @@ document.addEventListener('DOMContentLoaded', () => {
             console.log(`Initializing viewer: ${viewer.id}`);
             init3DViewer(viewer.id);
             
-            // Load a default cube if no model is available
-            addDefaultCube(viewer.id);
+            // Load default PLY model instead of cube
+            setTimeout(() => {
+                loadModel('ff.ply', viewer.id);  // or whatever your PLY file is named
+            }, 100); // Small delay to ensure initialization is complete
         }
     });
-
-    // Smooth scrolling for navigation links
-    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-        anchor.addEventListener('click', function (e) {
-            e.preventDefault();
-            const target = document.querySelector(this.getAttribute('href'));
-            if (target) {
-                target.scrollIntoView({ behavior: 'smooth' });
-            }
-        });
-    });
-});
 
 // Add a default cube as placeholder
 function addDefaultCube(containerId) {
