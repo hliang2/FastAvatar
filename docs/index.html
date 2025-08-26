@@ -137,59 +137,53 @@
   <!-- Demo (Video) -->
   <section id="demo" class="py-5">
       <div class="container">
-        <h2 class="text-center mb-4">Demo (Feed-Forward vs Full)</h2>
-        <div class="row align-items-center">
+        <h2 class="text-center mb-4">Demo (Feed-forward vs Full)</h2>
 
-          <!-- Left: Input view image -->
-          <div class="col-lg-5 mb-4">
-              <div class="card">
-                <div class="card-body text-center">
-                  <h5 class="card-title">Input Image</h5>
-                  <img src="assets/images/input1.png" 
-                       class="img-fluid rounded shadow" 
-                       alt="Input Image"
-                       style="max-width: 80%; height: auto; margin: 0 auto;" />
-                  <p class="text-muted small mt-2">Single input view used to reconstruct the avatar.</p>
-                </div>
+        <div class="row align-items-start g-4">
+          <!-- Left: Input image -->
+          <div class="col-md-5 col-lg-4">
+            <div class="card h-100">
+              <div class="card-body text-center">
+                <h5 class="card-title">Input Image</h5>
+                <img
+                  src="assets/images/input1.png"
+                  alt="Input"
+                  class="img-fluid rounded shadow-sm"
+                  style="max-width: 80%; height: auto;"
+                />
+                <p class="text-muted small mt-2">
+                  Single input view used to reconstruct the avatar.
+                </p>
               </div>
             </div>
           </div>
 
-          <!-- Right: Video player -->
-          <div class="col-lg-7">
-            <div class="card shadow-sm">
+          <!-- Right: Video preview -->
+          <div class="col-md-7 col-lg-8">
+            <div class="card h-100">
               <div class="card-body">
-                <h5 class="card-title mb-3">Reconstruction Preview</h5>
+                <h5 class="card-title">Reconstruction Preview</h5>
 
-                <div class="video-wrapper">
-                  <video id="demoVideo"
-                         src="assets/videos/ff.mp4"
-                         playsinline
-                         muted
-                         loop
-                         autoplay
-                         preload="auto">
-                    Sorry, your browser doesn’t support embedded videos.
+                <!-- Fixed aspect ratio box for smooth sizing -->
+                <div class="ratio ratio-16x9 rounded overflow-hidden" style="background:#e9ecef;">
+                  <video id="resultVideo"
+                         class="w-100 h-100"
+                         autoplay muted loop playsinline
+                         style="object-fit: contain; background:#e9ecef;">
+                    <source src="assets/videos/ff.mp4" type="video/mp4">
                   </video>
                 </div>
 
-                <div class="text-center mt-3 thumb-btns">
-                  <button class="btn btn-primary me-2"
-                          onclick="swapVideo('assets/videos/ff.mp4', this)">
-                    Feed-forward (10 ms)
-                  </button>
-                  <button class="btn btn-outline-primary"
-                          onclick="swapVideo('assets/videos/full.mp4', this)">
-                    Full optimization(3 s refine)
-                  </button>
+                <div class="d-flex gap-2 justify-content-center mt-3">
+                  <button class="btn btn-primary btn-sm" id="btnFF">Feed-forward (10 ms)</button>
+                  <button class="btn btn-outline-primary btn-sm" id="btnFull">Full (10 seconds refine)</button>
                 </div>
 
-                <div class="text-muted small mt-2">
-                </div>
+                <p class="text-muted small mt-2 text-center">
+                </p>
               </div>
             </div>
           </div>
-
         </div>
       </div>
     </section>
@@ -275,5 +269,24 @@
       }
     }
   </script>
+<script>
+  const v = document.getElementById('resultVideo');
+  const btnFF = document.getElementById('btnFF');
+  const btnFull = document.getElementById('btnFull');
+
+  btnFF?.addEventListener('click', () => {
+    v.src = 'assets/videos/ff.mp4';
+    v.play();
+    btnFF.classList.replace('btn-outline-primary','btn-primary');
+    btnFull.classList.replace('btn-primary','btn-outline-primary');
+  });
+
+  btnFull?.addEventListener('click', () => {
+    v.src = 'assets/videos/full.mp4';
+    v.play();
+    btnFull.classList.replace('btn-outline-primary','btn-primary');
+    btnFF.classList.replace('btn-primary','btn-outline-primary');
+  });
+</script>
 </body>
 </html>
