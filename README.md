@@ -4,7 +4,7 @@
 [![PyTorch](https://img.shields.io/badge/PyTorch-2.1%2B-red)](https://pytorch.org/)
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
-**[[Paper]](https://drive.google.com/file/d/1SQOx8kHnnaqaCv_PjUqbVMYRzUOtUZuM/view?usp=sharing)**  **[[Website]](https://hliang2.github.io/FastAvatar/)**
+**[[Paper]](https://arxiv.org/pdf/2508.18389)**  **[[Website]](https://hliang2.github.io/FastAvatar/)**
 
 ## Overview
 
