@@ -60,9 +60,9 @@ Perform end-to-end inference from a single image without FLAME guidance:
 # Basic single image inference
 python scripts/inference_feedforward_no_guidance.py \
     --image /path/to/image.jpg \
-    --encoder_checkpoint /path/to/encoder.pth \
-    --decoder_checkpoint /path/to/decoder.pth \
-    --dino_checkpoint /path/to/dino_model.pth
+    --encoder_checkpoint pretrained_weights/encoder_neutral_flame.pth \
+    --decoder_checkpoint pretrained_weights/decoder_neutral_flame.pth \
+    --dino_checkpoint pretrained_weights/dino_encoder.pth
 ```
 
 ### Inference with FLAME guidance (nersemble-style)
