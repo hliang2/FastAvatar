@@ -54,7 +54,7 @@ Unzip and place them in pretrained_weights/
 
 ### Single Image Inference
 
-Perform end-to-end inference from a single image without COLMAP reconstruction:
+Perform end-to-end inference from a single image without FLAME guidance:
 
 ```bash
 # Basic single image inference
@@ -65,15 +65,6 @@ python scripts/inference_feedforward_no_guidance.py \
     --dino_checkpoint /path/to/dino_model.pth
 ```
 
-All experiment outputs are organized under the `results/` folder:
-
-- **`results/images/`**  
-  Contains rendered sample view images for each subject for quick reference.
-
-- **`results/ply/`**  
-  Contains 3D point cloud reconstructions in `.ply` format. These can be visualized with any standard 3D viewer.  
-
-  
 ### Inference with FLAME guidance (nersemble-style)
 
 ```python
@@ -92,6 +83,15 @@ python scripts/inference_feedforward_full_guidance.py \
 # Using different LPIPS network
 python scripts/inference.py --sample_id 306 --lpips_net vgg
 ```
+
+All experiment outputs are organized under the `results/` folder:
+
+- **`results/images/`**  
+  Contains rendered sample view images for each subject for quick reference.
+
+- **`results/ply/`**  
+  Contains 3D point cloud reconstructions in `.ply` format. These can be visualized with any standard 3D viewer.  
+  
 You can use [Supersplat](https://superspl.at/editor) for interactive visualization of Gaussian-based point clouds.
 ## Training
 
@@ -169,8 +169,7 @@ This project builds upon several excellent open-source projects:
 - **[gsplat](https://github.com/nerfstudio-project/gsplat)** - Efficient CUDA kernels for differentiable Gaussian rasterization from Nerfstudio
 - **[InsightFace](https://github.com/deepinsight/insightface)** - State-of-the-art face analysis toolkit for face recognition and embedding
 - **[VHAP](https://github.com/ShenhanQian/VHAP)** - Head Tracking with FLAME
-
-Special thanks to the authors of these works for making their code publicly available.
+- **[DINOv2](https://github.com/facebookresearch/dinov2)** - Image features tracking
 
 ## Citation
 

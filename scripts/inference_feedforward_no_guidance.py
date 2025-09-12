@@ -288,7 +288,7 @@ def main():
     
     # Optional arguments
     parser.add_argument(
-        '--output_dir', type=str, default='./inference_output',
+        '--output_dir', type=str, default='./results',
         help='Directory to save results'
     )
     parser.add_argument(
