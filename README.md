@@ -90,7 +90,7 @@ All experiment outputs are organized under the `results/` folder:
   Contains rendered novel view images from multiple camera angles for visualization.
 
 - **`results/ply/`**  
-  Contains the final 3D Gaussian splat reconstruction in `.ply` format (`splats.ply`). These can be visualized with standard 3D viewers like [Supersplat](https://superspl.at/editor) for interactive Gaussian splatting visualization.
+  Point cloud results for FLAME guidance based inference.
 
 - **`splats.ply`**  
   Contains 3D point cloud reconstructions in `.ply` format. These can be visualized with any standard 3D viewer.  
@@ -108,6 +108,7 @@ All experiment outputs are organized under the `results/` folder:
   Comprehensive statistics and metadata about the reconstruction including Gaussian count, parameter statistics, and processing details.
   
 You can use [Supersplat](https://superspl.at/editor) for interactive visualization of Gaussian-based point clouds.
+
 ## Training
 
 ### Decoder Training
