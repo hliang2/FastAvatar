@@ -68,7 +68,7 @@ python scripts/inference_feedforward_no_guidance.py \
 ### Inference with FLAME guidance (nersemble-style)
 
 ```python
-# Basic training with default parameters
+# Basic Inference/test-time optimization with default parameters
 python scripts/inference_feedforward_full_guidance.py
 
 # Custom learning rates and regularization
