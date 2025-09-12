@@ -6,6 +6,14 @@
 
 **[[Paper]](https://arxiv.org/pdf/2508.18389)**  **[[Website]](https://hliang2.github.io/FastAvatar/)**
 
+<table>
+  <tr>
+    <td align="center"><b>Comparison with SOTAs</b></td>
+  </tr>
+  <tr>
+    <td><img src="pictures/comparison.png" width="600"></td>
+</table>
+
 ## Overview
 
 We introduce FastAvatar, which achieves real-time 3D face reconstruction from a single image under unconstrained poses, combining high fidelity with speed.
@@ -187,17 +195,6 @@ FastAvatar/
 ├── pretrained_weights/          # Pretrained models
 ├── results/                     # Output directory
 ```
-
-
-## Results
-
-<table>
-  <tr>
-    <td align="center"><b>Comparison with SOTAs</b></td>
-  </tr>
-  <tr>
-    <td><img src="pictures/comparison.png" width="600"></td>
-</table>
 
 
 
