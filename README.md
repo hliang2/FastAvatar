@@ -82,15 +82,30 @@ python scripts/inference_feedforward_full_guidance.py \
 
 # Using different LPIPS network
 python scripts/inference.py --sample_id 306 --lpips_net vgg
-```
+``` 
 
 All experiment outputs are organized under the `results/` folder:
 
 - **`results/images/`**  
-  Contains rendered sample view images for each subject for quick reference.
+  Contains rendered novel view images from multiple camera angles for visualization.
 
 - **`results/ply/`**  
+  Contains the final 3D Gaussian splat reconstruction in `.ply` format (`splats.ply`). These can be visualized with standard 3D viewers like [Supersplat](https://superspl.at/editor) for interactive Gaussian splatting visualization.
+
+- **`splats.ply`**  
   Contains 3D point cloud reconstructions in `.ply` format. These can be visualized with any standard 3D viewer.  
+
+- **`w_vector.npy`**  
+  The predicted latent W vector used to generate the reconstruction.
+
+- **`dino_points.npy`**  
+  3D point predictions from the DINO model used as geometric guidance.
+
+- **`dino_camera_pose.npy`**  
+  Camera pose estimation from the DINO model (when available).
+
+- **`summary.json`**  
+  Comprehensive statistics and metadata about the reconstruction including Gaussian count, parameter statistics, and processing details.
   
 You can use [Supersplat](https://superspl.at/editor) for interactive visualization of Gaussian-based point clouds.
 ## Training
@@ -100,7 +115,7 @@ Train the decoder on multiple subjects with COLMAP reconstructions:
 
 ```bash
 # Basic decoder training
-python scripts/train.py --data_root /path/to/multi_subject_data
+python scripts/train_decoder.py --data_root /path/to/multi_subject_data
 
 # Custom learning rates and parameters
 python scripts/train_decoder.py \
