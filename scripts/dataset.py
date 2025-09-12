@@ -6,9 +6,11 @@ for conditional Gaussian Splatting, including COLMAP parsing and face embeddings
 """
 
 import os
+import glob
 import json
 import random
 import warnings
+import re
 from typing import Any, Dict, List, Optional, Tuple, Union
 from typing_extensions import assert_never
 
@@ -537,16 +539,16 @@ def _resize_image_folder(
 
 class GaussianFaceDataset(Dataset):
     """
-    PyTorch dataset for conditional Gaussian Splatting on face images.
+    PyTorch dataset for conditional Gaussian Splatting on face images (single subject inference).
     
     This dataset handles loading of:
     - Face images and their transformations
     - COLMAP reconstruction data
-    - Face embeddings from InsightFace
+    - Face embeddings from InsightFace (for inference)
     - Latent W vectors for each identity
     
     Args:
-        data_root: Path to the dataset root directory
+        data_root: Path to the dataset root directory (single COLMAP folder)
         w_dim: Dimension of latent W vectors (default: 512)
         image_size: Target image size as (height, width) (default: (256, 256))
         seed: Random seed for reproducibility (default: 42)
@@ -633,7 +635,6 @@ class GaussianFaceDataset(Dataset):
         
         for i in tqdm(range(len(parser.image_paths)), desc="Extracting face embeddings"):
             img_path = parser.image_paths[i]
-            
             # Load image for face detection
             img = cv2.imread(img_path)
             if img is None:
@@ -770,3 +771,736 @@ class GaussianFaceDataset(Dataset):
                 for id_ in self.ids
             }
         }
+
+
+class GaussianFaceDecoderDataset(Dataset):
+    """
+    PyTorch dataset for training conditional Gaussian Splatting decoder on multiple subjects.
+    
+    This dataset is optimized for decoder training:
+    - No face analysis/embeddings (not needed for decoder training)
+    - Only loads images and COLMAP data
+    - Creates W vectors for training
+    
+    Args:
+        data_root: Path to the dataset root directory containing multiple subject folders
+        w_dim: Dimension of latent W vectors (default: 512) 
+        image_size: Target image size as (height, width) (default: (256, 256))
+        seed: Random seed for reproducibility (default: 42)
+        max_subjects: Maximum number of subjects to load (None for all)
+        subject_pattern: Regex pattern to match subject folders
+    """
+    
+    def __init__(
+        self,
+        data_root: str,
+        w_dim: int = 512,
+        image_size: Tuple[int, int] = (256, 256),
+        seed: int = 42,
+        max_subjects: Optional[int] = None,
+        subject_pattern: str = r"(\d+)_EXP-1_v16_DS4_whiteBg_staticOffset_maskBelowLine"
+    ):
+        super().__init__()
+        
+        # Store configuration
+        self.data_root = data_root
+        self.w_dim = w_dim
+        self.image_size = image_size
+        self.max_subjects = max_subjects
+        self.subject_pattern = subject_pattern
+        
+        # Set random seeds for reproducibility
+        self._set_random_seeds(seed)
+        
+        # Initialize data structures
+        self.ids = []
+        self.data_samples = []
+        self.subject_folders = []
+        
+        # Discover and load data from all subjects (NO face analysis)
+        print("Discovering training dataset...")
+        self._discover_subjects()
+        self._load_all_subjects()
+        
+        # Initialize W vectors for identities
+        self.w_vectors, self.w_ids_to_idx = self._initialize_w_vectors()
+        
+        # Setup image transforms
+        self._setup_transforms()
+        
+        print(f"Training dataset loaded: {len(self.data_samples)} samples from {len(self.ids)} subjects")
+    
+    def _set_random_seeds(self, seed: int):
+        """Set random seeds for reproducibility."""
+        random.seed(seed)
+        np.random.seed(seed)
+        torch.manual_seed(seed)
+        
+        if torch.cuda.is_available():
+            torch.cuda.manual_seed(seed)
+            torch.cuda.manual_seed_all(seed)
+    
+    def _setup_transforms(self):
+        """Setup image transformation pipeline."""
+        self.transform = transforms.Compose([
+            transforms.Resize((224, 224)),
+            transforms.ToTensor(),
+        ])
+    
+    def _discover_subjects(self):
+        """
+        Discover all subject folders that match the naming pattern.
+        """
+        if not os.path.exists(self.data_root):
+            raise ValueError(f"Dataset root directory does not exist: {self.data_root}")
+        
+        # Find all directories matching the pattern
+        pattern = re.compile(self.subject_pattern)
+        subject_info = []
+        
+        for folder_name in os.listdir(self.data_root):
+            folder_path = os.path.join(self.data_root, folder_name)
+            
+            # Skip if not a directory
+            if not os.path.isdir(folder_path):
+                continue
+            
+            # Check if folder matches pattern
+            match = pattern.match(folder_name)
+            if match:
+                subject_id = int(match.group(1))  # Extract ID from first capture group
+                
+                # Verify that this is a valid COLMAP folder
+                sparse_dir = os.path.join(folder_path, "sparse")
+                images_dir = os.path.join(folder_path, "images")
+                
+                if os.path.exists(sparse_dir) and os.path.exists(images_dir):
+                    subject_info.append({
+                        'id': subject_id,
+                        'folder_name': folder_name,
+                        'folder_path': folder_path
+                    })
+                    print(f"Found subject {subject_id}: {folder_name}")
+                else:
+                    print(f"Warning: {folder_name} missing sparse/ or images/ directory")
+        
+        # Sort by subject ID
+        subject_info.sort(key=lambda x: x['id'])
+        
+        # Limit number of subjects if specified
+        if self.max_subjects is not None:
+            subject_info = subject_info[:self.max_subjects]
+            print(f"Limited to {len(subject_info)} subjects")
+        
+        self.subject_folders = subject_info
+        
+        if len(self.subject_folders) == 0:
+            raise ValueError(f"No valid subject folders found in {self.data_root}")
+        
+        print(f"Discovered {len(self.subject_folders)} subjects")
+    
+    def _load_all_subjects(self):
+        """
+        Load data from all discovered subject folders.
+        """
+        for subject_info in tqdm(self.subject_folders, desc="Loading subjects"):
+            try:
+                self._load_subject(subject_info)
+            except Exception as e:
+                print(f"Warning: Failed to load subject {subject_info['id']}: {e}")
+                continue
+    
+    def _load_subject(self, subject_info: Dict):
+        """
+        Load data from a single subject folder.
+        
+        Args:
+            subject_info: Dictionary containing subject information
+        """
+        subject_id = subject_info['id']
+        folder_path = subject_info['folder_path']
+        
+        print(f"Loading subject {subject_id} from {folder_path}")
+        
+        # Parse COLMAP data for this subject
+        try:
+            parser = Parser(folder_path)
+        except Exception as e:
+            print(f"Failed to parse COLMAP data for subject {subject_id}: {e}")
+            return
+        
+        # Add data samples from this subject (NO face analysis)
+        self._add_data_samples(parser, subject_id)
+    
+    def _add_data_samples(self, parser: Parser, identity_id: int):
+        """
+        Add data samples from a parsed COLMAP reconstruction.
+        NO face analysis - just load images and COLMAP data.
+        
+        Args:
+            parser: COLMAP parser instance
+            identity_id: Identity ID for these samples
+        """
+        initial_sample_count = len(self.data_samples)
+        
+        for i in range(len(parser.image_paths)):
+            img_path = parser.image_paths[i]
+            
+            # Just verify image exists - no face analysis
+            if not os.path.exists(img_path):
+                print(f"Warning: Image not found {img_path}")
+                continue
+            
+            # Create data sample (no embedding)
+            sample = {
+                "means": parser.points,
+                "image_path": img_path,
+                "camtoworlds": parser.camtoworlds[i],
+                "K": parser.Ks_dict[parser.camera_ids[i]],
+                "id": identity_id,
+                "image_name": parser.image_names[i],
+                "camera_id": parser.camera_ids[i],
+            }
+            
+            self.data_samples.append(sample)
+        
+        # Track unique identities
+        if identity_id not in self.ids:
+            self.ids.append(identity_id)
+        
+        samples_added = len(self.data_samples) - initial_sample_count
+        print(f"  Added {samples_added} samples for subject {identity_id}")
+    
+    def _initialize_w_vectors(self) -> Tuple[torch.Tensor, Dict[str, int]]:
+        """
+        Initialize W vectors for each identity.
+        Uses string keys with zero-padding to match checkpoint format.
+        
+        Returns:
+            Tuple of:
+                - W vectors tensor [num_identities, w_dim]
+                - Dictionary mapping identity IDs (as strings) to W vector indices
+        """
+        # Create mapping from identity ID to index (as strings with zero-padding)
+        sorted_ids = sorted(self.ids)
+        w_ids_to_idx = {str(id_val).zfill(3): idx for idx, id_val in enumerate(sorted_ids)}
+        
+        # Initialize W vectors with random values
+        num_identities = len(self.ids)
+        w_vectors = torch.randn(num_identities, self.w_dim)
+        
+        print(f"Initialized {num_identities} W vectors of dimension {self.w_dim}")
+        print(f"W vector keys: {list(w_ids_to_idx.keys())[:5]}...")  # Show first 5
+        
+        return w_vectors, w_ids_to_idx
+    
+    def get_w_vector(self, identity_id: int) -> torch.Tensor:
+        """
+        Get the W vector for a specific identity.
+        
+        Args:
+            identity_id: Identity ID
+            
+        Returns:
+            W vector tensor [w_dim]
+        """
+        key = str(identity_id).zfill(3)
+        idx = self.w_ids_to_idx[key]
+        return self.w_vectors[idx]
+    
+    def get_subjects_info(self) -> List[Dict]:
+        """
+        Get information about all loaded subjects.
+        
+        Returns:
+            List of subject information dictionaries
+        """
+        return self.subject_folders
+    
+    def get_samples_by_subject(self, subject_id: int) -> List[Dict]:
+        """
+        Get all samples for a specific subject.
+        
+        Args:
+            subject_id: Subject/identity ID
+            
+        Returns:
+            List of sample dictionaries for the subject
+        """
+        return [sample for sample in self.data_samples if sample["id"] == subject_id]
+    
+    def __len__(self) -> int:
+        """Return the number of samples in the dataset."""
+        return len(self.data_samples)
+    
+    def __getitem__(self, idx: int) -> Dict[str, Any]:
+        """
+        Get a single sample from the dataset.
+        
+        Args:
+            idx: Sample index
+            
+        Returns:
+            Dictionary containing:
+                - means: 3D point positions
+                - K: Camera intrinsic matrix
+                - camtoworlds: Camera extrinsic matrix
+                - id: Identity ID
+                - pixels: Raw image pixels
+                - image: Transformed image tensor (optional)
+                - w_vector: Latent W vector for the identity
+        """
+        sample = self.data_samples[idx]
+        
+        # Load and transform image
+        image = Image.open(sample['image_path']).convert('RGB')
+        image_tensor = self.transform(image)
+        
+        # Load raw pixels
+        pixels = imageio.imread(sample["image_path"])[..., :3]
+        
+        # Get W vector for this identity
+        w_vector = self.get_w_vector(sample["id"])
+        
+        # Prepare output dictionary (no embedding)
+        return_sample = {
+            "means": torch.from_numpy(sample["means"]).float(),
+            "K": torch.from_numpy(sample["K"]).float(),
+            "camtoworlds": torch.from_numpy(sample["camtoworlds"]).float(),
+            "id": str(sample["id"]).zfill(3),
+            "pixels": torch.from_numpy(pixels).float(),
+            "image": image_tensor,
+            "w_vector": w_vector,
+            "image_name": sample["image_name"],
+            "camera_id": sample["camera_id"],
+        }
+        
+        return return_sample
+    
+    def get_data_statistics(self) -> Dict[str, Any]:
+        """
+        Get statistics about the dataset.
+        
+        Returns:
+            Dictionary containing dataset statistics
+        """
+        samples_per_identity = {}
+        for id_ in self.ids:
+            samples_per_identity[id_] = sum(1 for s in self.data_samples if s["id"] == id_)
+        
+        return {
+            "num_samples": len(self.data_samples),
+            "num_identities": len(self.ids),
+            "w_dim": self.w_dim,
+            "image_size": self.image_size,
+            "identity_ids": self.ids,
+            "samples_per_identity": samples_per_identity,
+            "subject_folders": [info['folder_name'] for info in self.subject_folders],
+            "avg_samples_per_subject": np.mean(list(samples_per_identity.values())),
+            "min_samples_per_subject": min(samples_per_identity.values()) if samples_per_identity else 0,
+            "max_samples_per_subject": max(samples_per_identity.values()) if samples_per_identity else 0,
+        }
+
+
+class GaussianFaceEncoderDataset(Dataset):
+    """
+    PyTorch dataset for training the ViewInvariantEncoder.
+    
+    This dataset is optimized for encoder training:
+    - Loads face embeddings (needed for encoder input)
+    - Does NOT initialize W vectors (loads them from pretrained decoder)
+    - Minimal data loading - just embeddings and identity IDs
+    
+    Args:
+        data_root: Path to the dataset root directory containing multiple subject folders
+        seed: Random seed for reproducibility (default: 42)
+        max_subjects: Maximum number of subjects to load (None for all)
+        subject_pattern: Regex pattern to match subject folders
+    """
+    
+    def __init__(
+        self,
+        data_root: str,
+        seed: int = 42,
+        max_subjects: Optional[int] = None,
+        subject_pattern: str = r"(\d+)_EXP-1_v16_DS4_whiteBg_staticOffset_maskBelowLine"
+    ):
+        super().__init__()
+        
+        # Store configuration
+        self.data_root = data_root
+        self.max_subjects = max_subjects
+        self.subject_pattern = subject_pattern
+        
+        # Set random seeds for reproducibility
+        self._set_random_seeds(seed)
+        
+        # Initialize face analysis model
+        self._init_face_analysis()
+        
+        # Initialize data structures
+        self.ids = []
+        self.data_samples = []
+        self.subject_folders = []
+        
+        # Discover and load data from all subjects (WITH face analysis)
+        print("Discovering encoder training dataset...")
+        self._discover_subjects()
+        self._load_all_subjects()
+        
+        # Setup image transforms (minimal for encoder)
+        self._setup_transforms()
+        
+        print(f"Encoder dataset loaded: {len(self.data_samples)} samples from {len(self.ids)} subjects")
+    
+    def _set_random_seeds(self, seed: int):
+        """Set random seeds for reproducibility."""
+        random.seed(seed)
+        np.random.seed(seed)
+        torch.manual_seed(seed)
+        
+        if torch.cuda.is_available():
+            torch.cuda.manual_seed(seed)
+            torch.cuda.manual_seed_all(seed)
+    
+    def _init_face_analysis(self):
+        """Initialize InsightFace model for face embedding extraction."""
+        self.face_app = FaceAnalysis(name='buffalo_l')
+        self.face_app.prepare(ctx_id=0)  # Use GPU 0
+    
+    def _setup_transforms(self):
+        """Setup minimal image transformation pipeline."""
+        self.transform = transforms.Compose([
+            transforms.Resize((224, 224)),
+            transforms.ToTensor(),
+        ])
+    
+    def _discover_subjects(self):
+        """
+        Discover all subject folders that match the naming pattern.
+        """
+        if not os.path.exists(self.data_root):
+            raise ValueError(f"Dataset root directory does not exist: {self.data_root}")
+        
+        # Find all directories matching the pattern
+        pattern = re.compile(self.subject_pattern)
+        subject_info = []
+        
+        for folder_name in os.listdir(self.data_root):
+            folder_path = os.path.join(self.data_root, folder_name)
+            
+            # Skip if not a directory
+            if not os.path.isdir(folder_path):
+                continue
+            
+            # Check if folder matches pattern
+            match = pattern.match(folder_name)
+            if match:
+                subject_id = int(match.group(1))  # Extract ID from first capture group
+                
+                # Verify that this is a valid COLMAP folder
+                sparse_dir = os.path.join(folder_path, "sparse")
+                images_dir = os.path.join(folder_path, "images")
+                
+                if os.path.exists(sparse_dir) and os.path.exists(images_dir):
+                    subject_info.append({
+                        'id': subject_id,
+                        'folder_name': folder_name,
+                        'folder_path': folder_path
+                    })
+                    print(f"Found subject {subject_id}: {folder_name}")
+                else:
+                    print(f"Warning: {folder_name} missing sparse/ or images/ directory")
+        
+        # Sort by subject ID
+        subject_info.sort(key=lambda x: x['id'])
+        
+        # Limit number of subjects if specified
+        if self.max_subjects is not None:
+            subject_info = subject_info[:self.max_subjects]
+            print(f"Limited to {len(subject_info)} subjects")
+        
+        self.subject_folders = subject_info
+        
+        if len(self.subject_folders) == 0:
+            raise ValueError(f"No valid subject folders found in {self.data_root}")
+        
+        print(f"Discovered {len(self.subject_folders)} subjects")
+    
+    def _load_all_subjects(self):
+        """
+        Load data from all discovered subject folders.
+        """
+        for subject_info in tqdm(self.subject_folders, desc="Loading subjects"):
+            try:
+                self._load_subject(subject_info)
+            except Exception as e:
+                print(f"Warning: Failed to load subject {subject_info['id']}: {e}")
+                continue
+    
+    def _load_subject(self, subject_info: Dict):
+        """
+        Load data from a single subject folder.
+        
+        Args:
+            subject_info: Dictionary containing subject information
+        """
+        subject_id = subject_info['id']
+        folder_path = subject_info['folder_path']
+        
+        print(f"Loading subject {subject_id} from {folder_path}")
+        
+        # Parse COLMAP data for this subject
+        try:
+            parser = Parser(folder_path)
+        except Exception as e:
+            print(f"Failed to parse COLMAP data for subject {subject_id}: {e}")
+            return
+        
+        # Add data samples from this subject (WITH face analysis)
+        self._add_data_samples(parser, subject_id)
+    
+    def _add_data_samples(self, parser: Parser, identity_id: int):
+        """
+        Add data samples from a parsed COLMAP reconstruction.
+        WITH face analysis for encoder training.
+        
+        Args:
+            parser: COLMAP parser instance
+            identity_id: Identity ID for these samples
+        """
+        initial_sample_count = len(self.data_samples)
+        
+        for i in range(len(parser.image_paths)):
+            img_path = parser.image_paths[i]
+            
+            # Load image for face detection
+            img = cv2.imread(img_path)
+            if img is None:
+                print(f"Warning: Could not load image {img_path}")
+                continue
+            
+            # Extract face embeddings
+            try:
+                faces = self.face_app.get(img)
+            except Exception as e:
+                print(f"Warning: Face detection failed for {img_path}: {e}")
+                continue
+            
+            if len(faces) == 0:
+                print(f"Warning: No face detected in {img_path}")
+                continue
+            
+            # Use the first detected face
+            face = faces[0]
+            
+            # Create data sample (WITH embedding, minimal other data)
+            sample = {
+                "id": identity_id,
+                "embedding": face.embedding,
+                "image_path": img_path,  # Optional for debugging
+            }
+            
+            self.data_samples.append(sample)
+        
+        # Track unique identities
+        if identity_id not in self.ids:
+            self.ids.append(identity_id)
+        
+        samples_added = len(self.data_samples) - initial_sample_count
+        print(f"  Added {samples_added} samples for subject {identity_id}")
+    
+    def get_subjects_info(self) -> List[Dict]:
+        """
+        Get information about all loaded subjects.
+        
+        Returns:
+            List of subject information dictionaries
+        """
+        return self.subject_folders
+    
+    def get_samples_by_subject(self, subject_id: int) -> List[Dict]:
+        """
+        Get all samples for a specific subject.
+        
+        Args:
+            subject_id: Subject/identity ID
+            
+        Returns:
+            List of sample dictionaries for the subject
+        """
+        return [sample for sample in self.data_samples if sample["id"] == subject_id]
+    
+    def __len__(self) -> int:
+        """Return the number of samples in the dataset."""
+        return len(self.data_samples)
+    
+    def __getitem__(self, idx: int) -> Dict[str, Any]:
+        """
+        Get a single sample from the dataset.
+        
+        Args:
+            idx: Sample index
+            
+        Returns:
+            Dictionary containing:
+                - id: Identity ID 
+                - embedding: Face embedding vector
+        """
+        sample = self.data_samples[idx]
+        
+        # Prepare output dictionary (minimal - just ID and embedding)
+        return_sample = {
+            "id": str(sample["id"]).zfill(3),
+            "embedding": torch.from_numpy(sample["embedding"]).float(),
+        }
+        
+        return return_sample
+    
+    def get_data_statistics(self) -> Dict[str, Any]:
+        """
+        Get statistics about the dataset.
+        
+        Returns:
+            Dictionary containing dataset statistics
+        """
+        samples_per_identity = {}
+        for id_ in self.ids:
+            samples_per_identity[id_] = sum(1 for s in self.data_samples if s["id"] == id_)
+        
+        return {
+            "num_samples": len(self.data_samples),
+            "num_identities": len(self.ids),
+            "identity_ids": self.ids,
+            "samples_per_identity": samples_per_identity,
+            "subject_folders": [info['folder_name'] for info in self.subject_folders],
+            "avg_samples_per_subject": np.mean(list(samples_per_identity.values())),
+            "min_samples_per_subject": min(samples_per_identity.values()) if samples_per_identity else 0,
+            "max_samples_per_subject": max(samples_per_identity.values()) if samples_per_identity else 0,
+        }
+    
+class SingleImageDataset(Dataset):
+    """
+    PyTorch dataset for single image inference.
+    
+    This dataset is optimized for feedforward inference from a single image:
+    - Loads single image and extracts face embedding
+    - No COLMAP data needed
+    - No W vector initialization (gets from encoder)
+    - Minimal overhead for fast inference
+    
+    Args:
+        image_path: Path to input image
+        seed: Random seed for reproducibility (default: 42)
+    """
+    
+    def __init__(
+        self,
+        image_path: str,
+        seed: int = 42,
+    ):
+        super().__init__()
+        
+        # Store configuration
+        self.image_path = image_path
+        
+        # Set random seeds for reproducibility
+        self._set_random_seeds(seed)
+        
+        # Initialize face analysis model
+        self._init_face_analysis()
+        
+        # Setup image transforms
+        self._setup_transforms()
+        
+        # Process the single image
+        self._process_image()
+        
+        print(f"Single image dataset loaded: {self.image_path}")
+    
+    def _set_random_seeds(self, seed: int):
+        """Set random seeds for reproducibility."""
+        random.seed(seed)
+        np.random.seed(seed)
+        torch.manual_seed(seed)
+        
+        if torch.cuda.is_available():
+            torch.cuda.manual_seed(seed)
+            torch.cuda.manual_seed_all(seed)
+    
+    def _init_face_analysis(self):
+        """Initialize InsightFace model for face embedding extraction."""
+        self.face_app = FaceAnalysis(name='buffalo_l')
+        self.face_app.prepare(ctx_id=0)  # Use GPU 0
+    
+    def _setup_transforms(self):
+        """Setup image transformation pipeline."""
+        self.transform = transforms.Compose([
+            transforms.Resize((224, 224)),
+            transforms.ToTensor(),
+        ])
+        
+        # DINO transform (if needed)
+        self.dino_transform = transforms.Compose([
+            transforms.Resize((224, 224)),
+            transforms.ToTensor(),
+            transforms.Normalize(mean=[0.485, 0.456, 0.406], 
+                               std=[0.229, 0.224, 0.225])  # ImageNet normalization
+        ])
+    
+    def _process_image(self):
+        """Process the single input image."""
+        if not os.path.exists(self.image_path):
+            raise FileNotFoundError(f"Image not found: {self.image_path}")
+        
+        # Load image
+        img = cv2.imread(self.image_path)
+        if img is None:
+            raise ValueError(f"Could not load image: {self.image_path}")
+        
+        # Extract face embedding
+        faces = self.face_app.get(img)
+        if len(faces) == 0:
+            raise ValueError(f"No face detected in image: {self.image_path}")
+        
+        # Use the first detected face
+        face = faces[0]
+        self.embedding = face.embedding
+        
+        # Load raw image for transforms
+        self.raw_image = imageio.imread(self.image_path)[..., :3]
+        
+        print(f"Face detected and embedding extracted from {self.image_path}")
+    
+    def __len__(self) -> int:
+        """Return 1 since we have only one image."""
+        return 1
+    
+    def __getitem__(self, idx: int) -> Dict[str, Any]:
+        """
+        Get the single image sample.
+        
+        Args:
+            idx: Should be 0 (ignored)
+            
+        Returns:
+            Dictionary containing:
+                - embedding: Face embedding vector
+                - image: Transformed image tensor for encoder
+                - dino_image: Transformed image tensor for DINO
+                - raw_image: Raw image pixels
+                - image_path: Path to original image
+        """
+        # Convert to PIL for transforms
+        pil_image = Image.fromarray(self.raw_image).convert('RGB')
+        
+        # Prepare output dictionary
+        return_sample = {
+            "embedding": torch.from_numpy(self.embedding).float(),
+            "image": self.transform(pil_image),
+            "dino_image": self.dino_transform(pil_image),
+            "raw_image": torch.from_numpy(self.raw_image).float(),
+            "image_path": self.image_path,
+        }
+        
+        return return_sample

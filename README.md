@@ -41,19 +41,41 @@ pip install -r requirements.txt
 ```
 
 ### Download Pretrained Models
-Pretrained models can be downloaded **[here](https://drive.google.com/file/d/1SQOx8kHnnaqaCv_PjUqbVMYRzUOtUZuM/view?usp=sharing)**. 
+All pretrained models can be downloaded **[here](https://drive.google.com/file/d/1_XPTo_1rgzxvGQcRI7Toa3iGagytPTjK/view?usp=sharing)**. 
 Unzip and place them in pretrained_weights/
 
 ## Basic Usage
 
-### Inference
+### Single Image Inference
+
+Perform end-to-end inference from a single image without COLMAP reconstruction:
+
+```bash
+# Basic single image inference
+python scripts/inference_feedforward_no_guidance.py \
+    --image /path/to/image.jpg \
+    --encoder_checkpoint /path/to/encoder.pth \
+    --decoder_checkpoint /path/to/decoder.pth \
+    --dino_checkpoint /path/to/dino_model.pth
+```
+
+All experiment outputs are organized under the `results/` folder:
+
+- **`results/images/`**  
+  Contains rendered sample view images for each subject for quick reference.
+
+- **`results/ply/`**  
+  Contains 3D point cloud reconstructions in `.ply` format. These can be visualized with any standard 3D viewer.  
+
+  
+#### Inference with FLAME guidance (nersemble-style)
 
 ```python
 # Basic training with default parameters
-python scripts/inference.py
+python scripts/inference_feedforward_full_guidance.py
 
 # Custom learning rates and regularization
-python scripts/inference.py \
+python scripts/inference_feedforward_full_guidance.py \
     --sample_id 306 \
     --max_epochs 401 \
     --mlp_lr 2e-4 \
@@ -64,15 +86,60 @@ python scripts/inference.py \
 # Using different LPIPS network
 python scripts/inference.py --sample_id 306 --lpips_net vgg
 ```
+You can use [Supersplat](https://superspl.at/editor) for interactive visualization of Gaussian-based point clouds.
+### Training
 
-All experiment outputs are organized under the `results/` folder:
+#### Decoder Training
+Train the decoder on multiple subjects with COLMAP reconstructions:
 
-- **`results/images/`**  
-  Contains rendered sample view images for each subject for quick reference.
+```bash
+# Basic decoder training
+python scripts/train.py --data_root /path/to/multi_subject_data
 
-- **`results/ply/`**  
-  Contains 3D point cloud reconstructions in `.ply` format. These can be visualized with any standard 3D viewer.  
-  For example, you can use [Supersplat](https://superspl.at/editor) for interactive visualization of Gaussian-based point clouds.
+# Custom learning rates and parameters
+python scripts/train.py \
+    --data_root /path/to/multi_subject_data \
+    --max_epochs 800 \
+    --mlp_lr 2e-4 \
+    --w_lr 1e-4 \
+    --base_lr 5e-5 \
+    --l1_weight 0.6 \
+    --ssim_weight 0.3 \
+    --lpips_weight 0.1
+
+# With regularization
+python scripts/train.py \
+    --data_root /path/to/multi_subject_data \
+    --scale_reg 0.01 \
+    --pos_reg 0.001
+```
+
+#### Encoder Training
+Train the encoder to predict W vectors from face embeddings:
+
+```bash
+# Basic encoder training (requires pretrained decoder)
+python scripts/train_encoder.py \
+    --data_root /path/to/multi_subject_data \
+    --decoder_load_path /path/to/decoder.pth
+
+# Custom training parameters
+python scripts/train_encoder.py \
+    --data_root /path/to/multi_subject_data \
+    --decoder_load_path /path/to/decoder.pth \
+    --encoder_lr 2e-4 \
+    --batch_size 128 \
+    --max_epochs 800 \
+    --mse_weight 0.2 \
+    --cosine_weight 0.8
+
+# With contrastive learning
+python scripts/train_encoder.py \
+    --data_root /path/to/multi_subject_data \
+    --decoder_load_path /path/to/decoder.pth \
+    --contrastive_weight 0.1 \
+    --contrastive_temperature 0.07
+```
 
 ### Data Preparation *(optional with custom data, instructions to be added)*
 
@@ -89,6 +156,19 @@ data/
 │   └── poses_bounds.npy  # (optional) Camera bounds
 ```
 
+#### Training Data Structure
+For training multiple subjects, organize data as:
+
+```bash
+training_data/
+├── 001_EXP-1_v16_DS4_whiteBg_staticOffset_maskBelowLine/
+│   ├── images/           # Face images for subject 001
+│   └── sparse/           # COLMAP reconstruction
+├── 002_EXP-1_v16_DS4_whiteBg_staticOffset_maskBelowLine/
+│   ├── images/
+│   └── sparse/
+└── ...
+```
 
 ## Project Structure
 
@@ -98,6 +178,9 @@ FastAvatar/
 │   ├── model.py                 # Model architectures  
 │   ├── dataset.py               # Data loading and processing   
 │   ├── inference.py             # Feed-forward Inference script 
+│   ├── train.py                 # Decoder training script
+│   ├── train_encoder.py         # Encoder training script
+│   ├── feedforward_inference.py # Single image inference
 │   └── utils.py                 # Utility functions      
 ├── data/                        # Dataset directory (not included)
 │   └── <sample_id>/             # Individual samples

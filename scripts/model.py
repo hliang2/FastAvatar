@@ -703,3 +703,313 @@ class ViewInvariantEncoder(nn.Module):
             return projected, insightface_features
         
         return projected
+    
+class DINOv2Encoder(nn.Module):
+    """
+    Improved encoder with proper rotation representation and residual point prediction
+    """
+    
+    def __init__(
+        self,
+        dino_model='dinov2_vitb14',
+        max_points=10000,
+        hidden_dim=1024,
+        num_layers=3,
+        dropout=0.1,
+        freeze_dino=False,
+        use_rotation_6d=True,  # Use 6D rotation representation
+        predict_point_residuals=True,  # Predict residuals from mean shape
+    ):
+        super().__init__()
+        
+        self.max_points = max_points
+        self.use_rotation_6d = use_rotation_6d
+        self.predict_point_residuals = predict_point_residuals
+        
+        # Load DINOv2 model
+        self.dino = torch.hub.load('facebookresearch/dinov2', dino_model)
+        
+        # Get feature dimension
+        if 'vits' in dino_model:
+            self.feat_dim = 384
+        elif 'vitb' in dino_model:
+            self.feat_dim = 768
+        elif 'vitl' in dino_model:
+            self.feat_dim = 1024
+        elif 'vitg' in dino_model:
+            self.feat_dim = 1536
+        
+        if freeze_dino:
+            for param in self.dino.parameters():
+                param.requires_grad = False
+        
+        # Projection head for 3D points (residuals or full)
+        self.points_projector = self._build_projector(
+            self.feat_dim,
+            hidden_dim,
+            max_points * 3,
+            num_layers,
+            dropout
+        )
+        
+        # Projection head for camera pose
+        # 6D rotation (6) + translation (3) = 9 parameters
+        # or quaternion (4) + translation (3) = 7 parameters
+        pose_dim = 9 if use_rotation_6d else 7
+        self.pose_projector = self._build_projector(
+            self.feat_dim,
+            hidden_dim,
+            pose_dim,
+            num_layers,
+            dropout
+        )
+        
+        # Learnable mean shape (optional)
+        if predict_point_residuals:
+            self.register_buffer('mean_shape', torch.zeros(max_points, 3))
+            self.learn_mean_shape = nn.Parameter(torch.zeros(max_points, 3))
+    
+    def _build_projector(self, in_dim, hidden_dim, out_dim, num_layers, dropout):
+        layers = []
+        
+        for i in range(num_layers):
+            if i == 0:
+                layers.append(nn.Linear(in_dim, hidden_dim))
+            else:
+                layers.append(nn.Linear(hidden_dim, hidden_dim))
+            
+            layers.append(nn.LayerNorm(hidden_dim))
+            layers.append(nn.ReLU(inplace=True))
+            
+            if i < num_layers - 1:
+                layers.append(nn.Dropout(dropout))
+        
+        layers.append(nn.Linear(hidden_dim, out_dim))
+        
+        return nn.Sequential(*layers)
+    
+    def rotation_6d_to_matrix(self, d6):
+        """
+        Convert 6D rotation representation to rotation matrix.
+        Based on Zhou et al. "On the Continuity of Rotation Representations in Neural Networks"
+        
+        Args:
+            d6: (B, 6) tensor
+        
+        Returns:
+            R: (B, 3, 3) rotation matrix
+        """
+        a1, a2 = d6[..., :3], d6[..., 3:]
+        
+        # Gram-Schmidt orthogonalization
+        b1 = F.normalize(a1, dim=-1)
+        b2 = a2 - (b1 * a2).sum(-1, keepdim=True) * b1
+        b2 = F.normalize(b2, dim=-1)
+        b3 = torch.cross(b1, b2, dim=-1)
+        
+        return torch.stack([b1, b2, b3], dim=-2)
+    
+    def quaternion_to_matrix(self, quaternion):
+        """
+        Convert quaternion to rotation matrix.
+        
+        Args:
+            quaternion: (B, 4) tensor (w, x, y, z)
+        
+        Returns:
+            R: (B, 3, 3) rotation matrix
+        """
+        # Normalize quaternion
+        quaternion = F.normalize(quaternion, dim=-1)
+        
+        w, x, y, z = quaternion[..., 0], quaternion[..., 1], quaternion[..., 2], quaternion[..., 3]
+        
+        # Convert to rotation matrix
+        R = torch.zeros(quaternion.shape[0], 3, 3, device=quaternion.device)
+        
+        R[:, 0, 0] = 1 - 2 * (y**2 + z**2)
+        R[:, 0, 1] = 2 * (x * y - w * z)
+        R[:, 0, 2] = 2 * (x * z + w * y)
+        
+        R[:, 1, 0] = 2 * (x * y + w * z)
+        R[:, 1, 1] = 1 - 2 * (x**2 + z**2)
+        R[:, 1, 2] = 2 * (y * z - w * x)
+        
+        R[:, 2, 0] = 2 * (x * z - w * y)
+        R[:, 2, 1] = 2 * (y * z + w * x)
+        R[:, 2, 2] = 1 - 2 * (x**2 + y**2)
+        
+        return R
+    
+    def forward(self, x):
+        batch_size = x.shape[0]
+        
+        # Extract features with DINOv2
+        features = self.dino.forward_features(x)
+        
+        # Use CLS token for both predictions
+        cls_token = features['x_norm_clstoken']  # (B, feat_dim)
+        
+        # Predict camera pose
+        pose_params = self.pose_projector(cls_token)  # (B, 9) or (B, 7)
+        
+        if self.use_rotation_6d:
+            rotation_6d = pose_params[..., :6]
+            translation = pose_params[..., 6:9]
+            rotation_matrix = self.rotation_6d_to_matrix(rotation_6d)
+        else:
+            quaternion = pose_params[..., :4]
+            translation = pose_params[..., 4:7]
+            rotation_matrix = self.quaternion_to_matrix(quaternion)
+        
+        # Construct camera-to-world matrix
+        c2w = torch.zeros(batch_size, 4, 4, device=x.device)
+        c2w[:, :3, :3] = rotation_matrix
+        c2w[:, :3, 3] = translation
+        c2w[:, 3, 3] = 1.0
+        
+        # Predict 3D points
+        points_output = self.points_projector(cls_token)  # (B, max_points * 3)
+        points_output = points_output.view(batch_size, self.max_points, 3)
+        
+        if self.predict_point_residuals:
+            # Add residuals to mean shape
+            mean_shape = self.mean_shape + self.learn_mean_shape
+            points = mean_shape.unsqueeze(0) + points_output * 0.1  # Scale residuals
+        else:
+            points = points_output
+        
+        return {
+            'points': points,
+            'camera_pose': c2w,  # Full 4x4 matrix
+            'camera_pose_flat': c2w[:, :3, :].reshape(batch_size, -1),  # For loss computation
+            'rotation_matrix': rotation_matrix,
+            'translation': translation,
+        }
+
+
+class EncoderWithLoss(nn.Module):
+    """Improved loss computation with proper rotation loss"""
+    
+    def __init__(
+        self,
+        encoder,
+        points_weight=1.0,
+        rotation_weight=1.0,
+        translation_weight=1.0,
+        use_geodesic_rotation_loss=True,
+    ):
+        super().__init__()
+        self.encoder = encoder
+        self.points_weight = points_weight
+        self.rotation_weight = rotation_weight
+        self.translation_weight = translation_weight
+        self.use_geodesic_rotation_loss = use_geodesic_rotation_loss
+    
+    def geodesic_loss(self, R_pred, R_gt):
+        """
+        Compute geodesic distance between rotation matrices.
+        This is the angle of rotation between two rotation matrices.
+        """
+        # Compute R_pred @ R_gt.T
+        R_diff = torch.bmm(R_pred, R_gt.transpose(1, 2))
+        
+        # Compute trace
+        trace = R_diff[:, 0, 0] + R_diff[:, 1, 1] + R_diff[:, 2, 2]
+        
+        # Clamp to avoid numerical issues with arccos
+        trace = torch.clamp(trace, min=-1.0 + 1e-6, max=3.0 - 1e-6)
+        
+        # Compute angle
+        angle = torch.acos((trace - 1.0) / 2.0)
+        
+        return angle.mean()
+    
+    def forward(self, batch, training=True):
+        # Get predictions
+        predictions = self.encoder(batch['image'])
+        
+        outputs = {
+            'points_pred': predictions['points'],
+            'rotation_pred': predictions['rotation_matrix'],
+            'translation_pred': predictions['translation'],
+        }
+        
+        if training:
+            losses = {}
+            
+            # Points loss
+            points_loss = F.mse_loss(
+                predictions['points'],
+                batch['points']  # or batch['point_residuals'] if using residuals
+            )
+            losses['points'] = points_loss * self.points_weight
+            
+            # Extract ground truth rotation and translation
+            gt_rotation = batch['rotation_matrix']  # (B, 3, 3)
+            gt_translation = batch['translation']    # (B, 3)
+            
+            # Rotation loss
+            if self.use_geodesic_rotation_loss:
+                rotation_loss = self.geodesic_loss(
+                    predictions['rotation_matrix'],
+                    gt_rotation
+                )
+            else:
+                rotation_loss = F.mse_loss(
+                    predictions['rotation_matrix'],
+                    gt_rotation
+                )
+            losses['rotation'] = rotation_loss * self.rotation_weight
+            
+            # Translation loss
+            translation_loss = F.mse_loss(
+                predictions['translation'],
+                gt_translation
+            )
+            losses['translation'] = translation_loss * self.translation_weight
+            
+            # Total loss
+            losses['total'] = losses['points'] + losses['rotation'] + losses['translation']
+            
+            outputs['losses'] = losses
+        
+        return outputs
+
+
+def create_model(
+    dino_model='dinov2_vitb14',
+    max_points=10144,
+    hidden_dim=1024,
+    num_layers=3,
+    dropout=0.1,
+    freeze_dino=False,
+    use_rotation_6d=True,
+    predict_point_residuals=True,
+    points_weight=1.0,
+    rotation_weight=1.0,
+    translation_weight=1.0,
+    use_geodesic_rotation_loss=True,
+):
+    """Factory function to create the improved model"""
+    
+    encoder = DINOv2Encoder(
+        dino_model=dino_model,
+        max_points=max_points,
+        hidden_dim=hidden_dim,
+        num_layers=num_layers,
+        dropout=dropout,
+        freeze_dino=freeze_dino,
+        use_rotation_6d=use_rotation_6d,
+        predict_point_residuals=predict_point_residuals,
+    )
+    
+    model = EncoderWithLoss(
+        encoder=encoder,
+        points_weight=points_weight,
+        rotation_weight=rotation_weight,
+        translation_weight=translation_weight,
+        use_geodesic_rotation_loss=use_geodesic_rotation_loss,
+    )
+    
+    return model

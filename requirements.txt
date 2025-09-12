@@ -4,6 +4,8 @@
 # Core dependencies
 python-dotenv
 trimesh
+mpmath
+scikit-image==0.25.2
 numpy==1.25.1
 scikit-learn==1.5.0
 tqdm==4.66.4

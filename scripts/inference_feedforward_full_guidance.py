@@ -8,6 +8,7 @@ Gaussian Splatting models with face reconstruction.
 import argparse
 import os
 import time
+import pdb
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Dict, Optional, Tuple, Any, List
@@ -395,7 +396,7 @@ class GaussianSplattingTrainer:
         # Save PLY file once (same for all views)
         ply_path = self.dirs['ply'] / f"{prefix}_trainview{training_view:02d}_step{step:06d}.ply"
         save_ply(splats, str(ply_path), None)
-    
+
     def compute_losses(
         self,
         renders: torch.Tensor,
@@ -522,8 +523,8 @@ class GaussianSplattingTrainer:
             self.w_vectors = self.encoder(embedding)
             splats, _ = self.decoder(self.w_vectors, 0)
             splats["means"] = means_3d.squeeze(0) + splats["means"]
-            
             # Render from all viewpoints for initial state
+            
             self.render_all_views(
                 splats=splats,
                 prefix="initial",
@@ -838,24 +839,24 @@ if __name__ == "__main__":
     Usage examples:
     
     # Basic usage with defaults
-    python scripts/inference.py
+    python scripts/inference_feedforward_full_guidance.py
     
     # Custom sample and epochs
-    python scripts/inference.py --sample_id 200 --max_epochs 1000
+    python scripts/inference_feedforward_full_guidance.py --sample_id 200 --max_epochs 1000
     
     # Custom learning rates
-    python scripts/inference.py --mlp_lr 2e-4 --w_lr 5e-5
+    python scripts/inference_feedforward_full_guidance.py --mlp_lr 2e-4 --w_lr 5e-5
     
     # With regularization
-    python scripts/inference.py --scale_reg 0.01 --pos_reg 0.001
+    python scripts/inference_feedforward_full_guidance.py --scale_reg 0.01 --pos_reg 0.001
     
     # Custom paths
-    python scripts/inference.py --data_root /path/to/data --save_path /path/to/results
+    python scripts/inference_feedforward_full_guidance.py --data_root /path/to/data --save_path /path/to/results
     
     # Enable packed mode and sparse gradients
-    python scripts/inference.py --packed --sparse_grad
+    python scripts/inference_feedforward_full_guidance.py --packed --sparse_grad
     
     # Different LPIPS network
-    python scripts/inference.py --lpips_net vgg
+    python scripts/inference_feedforward_full_guidance.py --lpips_net vgg
     """
     main()
