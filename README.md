@@ -8,10 +8,8 @@
 
 <table>
   <tr>
-    <td align="center"><b>Comparison with SOTAs</b></td>
+    <td><img src="docs/assets/images/teaser.png" width="600"></td>
   </tr>
-  <tr>
-    <td><img src="pictures/comparison.png" width="600"></td>
 </table>
 
 ## Overview
