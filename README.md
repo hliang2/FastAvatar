@@ -8,7 +8,7 @@
 
 <table>
   <tr>
-    <td><img src="docs/assets/images/teaser.png" width="600"></td>
+    <td align="center"><img src="docs/assets/images/teaser.png" width="600"></td>
   </tr>
 </table>
 
@@ -74,7 +74,7 @@ All experiment outputs are organized under the `results/` folder:
   Contains 3D point cloud reconstructions in `.ply` format. These can be visualized with any standard 3D viewer.  
 
   
-#### Inference with FLAME guidance (nersemble-style)
+### Inference with FLAME guidance (nersemble-style)
 
 ```python
 # Basic training with default parameters
@@ -93,9 +93,9 @@ python scripts/inference_feedforward_full_guidance.py \
 python scripts/inference.py --sample_id 306 --lpips_net vgg
 ```
 You can use [Supersplat](https://superspl.at/editor) for interactive visualization of Gaussian-based point clouds.
-### Training
+## Training
 
-#### Decoder Training
+### Decoder Training
 Train the decoder on multiple subjects with COLMAP reconstructions:
 
 ```bash
@@ -103,7 +103,7 @@ Train the decoder on multiple subjects with COLMAP reconstructions:
 python scripts/train.py --data_root /path/to/multi_subject_data
 
 # Custom learning rates and parameters
-python scripts/train.py \
+python scripts/train_decoder.py \
     --data_root /path/to/multi_subject_data \
     --max_epochs 800 \
     --mlp_lr 2e-4 \
@@ -114,13 +114,13 @@ python scripts/train.py \
     --lpips_weight 0.1
 
 # With regularization
-python scripts/train.py \
+python scripts/train_decoder.py \
     --data_root /path/to/multi_subject_data \
     --scale_reg 0.01 \
     --pos_reg 0.001
 ```
 
-#### Encoder Training
+### Encoder Training
 Train the encoder to predict W vectors from face embeddings:
 
 ```bash
@@ -147,23 +147,8 @@ python scripts/train_encoder.py \
     --contrastive_temperature 0.07
 ```
 
-### Data Preparation *(optional with custom data, instructions to be added)*
-
-```bash
-# Structure your data as follows:
-data/
-├── <sample_id>/
-│   ├── images/           # Input images
-│   ├── sparse/           # FLAME-COLMAP reconstruction
-│   │   ├── 0/
-│   │   │   ├── cameras.bin
-│   │   │   ├── images.bin
-│   │   │   └── points3D.bin
-│   └── poses_bounds.npy  # (optional) Camera bounds
-```
-
-#### Training Data Structure
-For training multiple subjects, organize data as:
+### Training Data Structure
+For training multiple subjects, organize data as **[VHAP](https://github.com/ShenhanQian/VHAP)** style:
 
 ```bash
 training_data/
@@ -175,25 +160,6 @@ training_data/
 │   └── sparse/
 └── ...
 ```
-
-## Project Structure
-
-```
-FastAvatar/
-├── scripts/
-│   ├── model.py                 # Model architectures  
-│   ├── dataset.py               # Data loading and processing   
-│   ├── inference.py             # Feed-forward Inference script 
-│   ├── train.py                 # Decoder training script
-│   ├── train_encoder.py         # Encoder training script
-│   ├── feedforward_inference.py # Single image inference
-│   └── utils.py                 # Utility functions      
-├── data/                        # Dataset directory (not included)
-│   └── <sample_id>/             # Individual samples
-├── pretrained_weights/          # Pretrained models
-├── results/                     # Output directory
-```
-
 
 
 ## Acknowledgments
@@ -211,7 +177,12 @@ Special thanks to the authors of these works for making their code publicly avai
 If you find this work useful for your research, please consider citing:
 
 ```bibtex
-@misc{****}
+@article{liang2025fastavatar,
+  title={FastAvatar: Instant 3D Gaussian Splatting for Faces from Single Unconstrained Poses},
+  author={Liang, Hao and Ge, Zhixuan and Tiwari, Ashish and Majee, Soumendu and Godaliyadda, GM and Veeraraghavan, Ashok and Balakrishnan, Guha},
+  journal={arXiv preprint arXiv:2508.18389},
+  year={2025}
+}
 ```
 
 
