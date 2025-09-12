@@ -86,10 +86,10 @@ python scripts/inference.py --sample_id 306 --lpips_net vgg
 
 All experiment outputs are organized under the `results/` folder:
 
-- **`results/images/`**  
+- **`images/`**  
   Contains rendered novel view images from multiple camera angles for visualization.
 
-- **`results/ply/`**  
+- **`ply/`**  
   Point cloud results for FLAME guidance based inference.
 
 - **`splats.ply`**  
