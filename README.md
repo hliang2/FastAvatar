@@ -51,8 +51,6 @@ All pretrained models can be downloaded **[here](https://drive.google.com/file/d
 Unzip and place them in pretrained_weights/
 
 ## Basic Usage
-
-### Single Image Inference
 #### Disclaimer on Dataset Bias
 
 This project was trained on datasets that may not fully represent the diversity of real-world populations.  
@@ -60,6 +58,9 @@ As a result, the performance of the model can vary across different demographic 
 
 While our framework demonstrates strong technical capabilities, we caution against assuming universal accuracy or fairness of the outputs.  
 Users are encouraged to interpret results with care and, where possible, retrain or fine-tune with more balanced datasets for broader applicability.
+
+### Single Image Inference
+
 Perform end-to-end inference from a single image without FLAME guidance:
 
 ```bash
