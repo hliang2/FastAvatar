@@ -50,6 +50,8 @@ pip install -r requirements.txt
 All pretrained models can be downloaded **[here](https://drive.google.com/file/d/1_XPTo_1rgzxvGQcRI7Toa3iGagytPTjK/view?usp=sharing)**. 
 Unzip and place them in pretrained_weights/
 
+For the released weights, we held out subjects **128, 165, 305, 306, 369, 422** for validation.
+
 ## Basic Usage
 #### Disclaimer on Dataset Bias
 
