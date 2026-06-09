@@ -50,7 +50,7 @@ pip install -r requirements.txt
 All pretrained models can be downloaded **[here](https://drive.google.com/file/d/1_XPTo_1rgzxvGQcRI7Toa3iGagytPTjK/view?usp=sharing)**. 
 Unzip and place them in pretrained_weights/
 
-For the released weights, we held out subjects **128, 165, 305, 306, 369, 422** for validation.
+For the released weights, we held out subjects **074, 128, 165, 305, 306, 422** for validation.
 
 ## Basic Usage
 #### Disclaimer on Dataset Bias
@@ -203,7 +203,7 @@ If you find this work useful for your research, please consider citing:
 ```bibtex
 @article{liang2025fastavatar,
   title={FastAvatar: Instant 3D Gaussian Splatting for Faces from Single Unconstrained Poses},
-  author={Liang, Hao and Ge, Zhixuan and Tiwari, Ashish and Majee, Soumendu and Godaliyadda, GM and Veeraraghavan, Ashok and Balakrishnan, Guha},
+  author={Liang, Hao and Ge, Zhixuan and Majee, Soumendu and Tiwari, Ashish and Godaliyadda, GM and Veeraraghavan, Ashok and Balakrishnan, Guha},
   journal={arXiv preprint arXiv:2508.18389},
   year={2025}
 }
