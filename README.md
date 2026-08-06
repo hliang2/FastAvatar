@@ -1,4 +1,4 @@
-# FastAvatar: Instant 3D Gaussian Splatting for Faces from Single Unconstrained Poses
+# FastAvatar: Instant 3D Gaussian Splatting for Faces from Single Unconstrained Poses [TMLR 2026]
 
 [![Python](https://img.shields.io/badge/Python-3.10%2B-blue)](https://www.python.org/)
 [![PyTorch](https://img.shields.io/badge/PyTorch-2.1%2B-red)](https://pytorch.org/)
